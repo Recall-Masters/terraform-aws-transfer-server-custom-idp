@@ -107,10 +107,10 @@ def lambda_handler(event, _context):
 
     if not resp_data['Role']:
         resp_data['Role'] = os.getenv('DEFAULT_IAM_ROLE_ARN')
-        resp_data['Policy'] = construct_policy(
+        resp_data['Policy'] = json.dumps(construct_policy(
             bucket_name=bucket_name,
             home_directory=resp_dict['HomeDirectory'],
-        )
+        ))
 
     if 'HomeDirectoryDetails' in resp_dict:
         print(
