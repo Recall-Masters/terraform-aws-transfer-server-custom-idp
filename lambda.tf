@@ -14,10 +14,14 @@ resource "aws_lambda_function" "sftp" {
   handler          = "sftp_lambda.lambda_handler"
   runtime          = "python3.7"
   source_code_hash = filebase64sha256(data.archive_file.sftp_lambda.output_path)
+  reserved_concurrent_executions = 5
+
   tracing_config {
     mode = "PassThrough"
   }
+
   timeouts {}
+
   environment {
     variables = {
       SecretsManagerRegion = var.region
@@ -26,6 +30,7 @@ resource "aws_lambda_function" "sftp" {
       BUCKET_NAME = var.s3_bucket_name
     }
   }
+
   tags = merge(
     var.input_tags,
     {
