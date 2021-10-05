@@ -20,7 +20,8 @@ resource "aws_lambda_function" "sftp" {
   timeouts {}
   environment {
     variables = {
-      "SecretsManagerRegion" = var.region
+      SecretsManagerRegion = var.region
+
       DEFAULT_IAM_ROLE_ARN = aws_iam_role.default.arn
       BUCKET_NAME = var.s3_bucket_name
     }
