@@ -118,11 +118,12 @@ def lambda_handler(event, _context):
             "HomeDirectoryDetails found - Applying setting for virtual folders",
         )
         resp_data['HomeDirectoryDetails'] = resp_dict['HomeDirectoryDetails']
-        resp_data['HomeDirectoryType'] = "LOGICAL"
 
     elif 'HomeDirectory' in resp_dict:
         print("HomeDirectory found - Cannot be used with HomeDirectoryDetails")
         resp_data['HomeDirectory'] = f'/{bucket_name}/{home_directory}'
+
+    resp_data['HomeDirectoryType'] = "LOGICAL"
 
     else:
         print("HomeDirectory not found - Defaulting to /")
