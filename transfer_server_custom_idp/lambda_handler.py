@@ -1,8 +1,25 @@
+import logging
 import os
 import json
 import boto3
 import base64
 from botocore.exceptions import ClientError
+
+import sentry_sdk
+from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
+
+logger = logging.getLogger(__name__)
+
+
+SENTRY_DSN = os.getenv('SENTRY_DSN')
+ENV = os.getenv('ENV')
+
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[AwsLambdaIntegration()],
+        environment=ENV,
+    )
 
 
 ALLOWED_TYPES = frozenset({

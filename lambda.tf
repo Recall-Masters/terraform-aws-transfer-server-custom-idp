@@ -34,6 +34,8 @@ resource "aws_lambda_function" "sftp" {
 
       DEFAULT_IAM_ROLE_ARN = aws_iam_role.default.arn
       BUCKET_NAME = var.s3_bucket_name
+      SENTRY_DSN = var.sentry_dsn
+      ENV = var.environment
     }
   }
 
