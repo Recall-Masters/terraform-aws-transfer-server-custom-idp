@@ -143,7 +143,12 @@ def lambda_handler(event, _context):
     if 'Policy' in resp_dict:
         resp_data['Policy'] = resp_dict['Policy']
 
-    home_directory = resp_dict['HomeDirectory']
+    home_directory = generate_home_directory_path(
+        user_configuration=resp_dict,
+        bucket_name=bucket_name,
+        user_name=input_username,
+    )
+
     if not resp_data['Role']:
         resp_data['Role'] = os.getenv('DEFAULT_IAM_ROLE_ARN')
         resp_data['Policy'] = json.dumps(construct_policy(
@@ -157,23 +162,14 @@ def lambda_handler(event, _context):
         )
         resp_data['HomeDirectoryDetails'] = resp_dict['HomeDirectoryDetails']
 
-    elif 'HomeDirectory' in resp_dict:
-        print("HomeDirectory found - Cannot be used with HomeDirectoryDetails")
-        resp_data['HomeDirectory'] = f'/{bucket_name}/{home_directory}'
-
-    else:
-        print("HomeDirectory not found - Defaulting to /")
-
     resp_data['HomeDirectoryType'] = 'LOGICAL'
     resp_data['HomeDirectoryDetails'] = json.dumps([{
         'Entry': '/',
-        'Target': generate_home_directory_path(
-            user_configuration=resp_dict,
-            bucket_name=bucket_name,
-            user_name=input_username,
-        ),
+        'Target': home_directory,
     }])
-    del resp_data['HomeDirectory']
+
+    if resp_data.get('HomeDirectory') is not None:
+        del resp_data['HomeDirectory']
 
     print("Completed Response Data: " + json.dumps(resp_data))
     return resp_data
