@@ -123,10 +123,10 @@ def lambda_handler(event, _context):
         print("HomeDirectory found - Cannot be used with HomeDirectoryDetails")
         resp_data['HomeDirectory'] = f'/{bucket_name}/{home_directory}'
 
-    resp_data['HomeDirectoryType'] = "LOGICAL"
-
     else:
         print("HomeDirectory not found - Defaulting to /")
+
+    resp_data['HomeDirectoryType'] = "LOGICAL"
 
     print("Completed Response Data: " + json.dumps(resp_data))
     return resp_data
