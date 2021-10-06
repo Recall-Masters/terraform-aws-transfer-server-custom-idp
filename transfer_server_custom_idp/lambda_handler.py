@@ -94,10 +94,13 @@ def generate_home_directory(
     return Template(
         template,
         undefined=StrictUndefined,
+        lstrip_blocks=True,
+        trim_blocks=True,
+        keep_trailing_newline=False,
     ).render(
         secret=secret,
         user_name=user_name,
-    )
+    ).strip()
 
 
 def generate_absolute_path(home_directory: str, bucket_name: str) -> str:
