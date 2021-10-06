@@ -55,10 +55,9 @@ def construct_policy(
     }
 
 
-def generate_home_directory_path(
+def generate_home_directory(
     user_configuration: dict,
     user_name: str,
-    bucket_name: str,
 ) -> str:
     """
     Generate the home path for the user.
@@ -68,7 +67,6 @@ def generate_home_directory_path(
     as a Lambda function environment variable).
 
     :param user_name: Name of the SFTP user;
-    :param bucket_name: S3 bucket to store the user's data at;
     :param user_configuration: User parameters from AWS Secrets Manager.
     :return: Full absolute path in the format AWS Transfer can understand.
     """
@@ -82,7 +80,18 @@ def generate_home_directory_path(
     company_id = user_configuration['company_id']
     dealer_id = user_configuration.get('dealer_id') or 'unknown-dealer'
 
-    return f'/{bucket_name}/{user_type}/{company_id}/{dealer_id}/{user_name}'
+    return f'{user_type}/{company_id}/{dealer_id}/{user_name}'
+
+
+def generate_absolute_path(home_directory: str, bucket_name: str) -> str:
+    """
+    Generate absolute S3 path in the format that SFTP Transfer accepts.
+
+    :param bucket_name: bucket;
+    :param home_directory: directory in the bucket.
+    :return: path.
+    """
+    return f'/{bucket_name}/{home_directory}'
 
 
 def lambda_handler(event, _context):
@@ -143,9 +152,8 @@ def lambda_handler(event, _context):
     if 'Policy' in resp_dict:
         resp_data['Policy'] = resp_dict['Policy']
 
-    home_directory = generate_home_directory_path(
+    home_directory = generate_home_directory(
         user_configuration=resp_dict,
-        bucket_name=bucket_name,
         user_name=input_username,
     )
 
@@ -165,7 +173,10 @@ def lambda_handler(event, _context):
     resp_data['HomeDirectoryType'] = 'LOGICAL'
     resp_data['HomeDirectoryDetails'] = json.dumps([{
         'Entry': '/',
-        'Target': home_directory,
+        'Target': generate_absolute_path(
+            home_directory=home_directory,
+            bucket_name=bucket_name,
+        ),
     }])
 
     if resp_data.get('HomeDirectory') is not None:
