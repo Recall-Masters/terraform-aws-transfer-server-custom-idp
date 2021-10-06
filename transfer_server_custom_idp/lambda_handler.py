@@ -19,6 +19,7 @@ if SENTRY_DSN:
         dsn=SENTRY_DSN,
         integrations=[AwsLambdaIntegration()],
         environment=ENV,
+        sample_rate=1.0,
     )
 
 
@@ -116,19 +117,19 @@ def lambda_handler(event, _context):
     bucket_name = os.getenv('BUCKET_NAME')
 
     if 'username' not in event or 'serverId' not in event:
-        print("Incoming username or serverId missing  - Unexpected")
+        logger.error("Incoming username or serverId missing  - Unexpected")
         return {}
 
     # It is recommended to verify server ID against some value, this template
     # does not verify server ID
     input_username = event['username']
-    print(
+    logger.error(
         "Username: {}, ServerId: {}".format(input_username, event['serverId']));
 
     if 'password' in event:
         input_password = event['password']
     else:
-        print("No password, checking for SSH public key")
+        logger.error("No password, checking for SSH public key")
         input_password = ''
 
     # Lookup user's secret which can contain the password or SSH public keys
@@ -137,19 +138,19 @@ def lambda_handler(event, _context):
     if resp is not None:
         resp_dict = json.loads(resp)
     else:
-        print("Secrets Manager exception thrown")
+        logger.error("Secrets Manager exception thrown")
         return {}
 
     if input_password != '':
         if 'password' in resp_dict:
             resp_password = resp_dict['password']
         else:
-            print(
+            logger.error(
                 "Unable to authenticate user - No field match in Secret for password")
             return {}
 
         if resp_password != input_password:
-            print(
+            logger.error(
                 "Unable to authenticate user - Incoming password does not match stored")
             return {}
     else:
@@ -157,7 +158,7 @@ def lambda_handler(event, _context):
         if 'PublicKey' in resp_dict:
             resp_data['PublicKeys'] = [resp_dict['PublicKey']]
         else:
-            print("Unable to authenticate user - No public keys found")
+            logger.error("Unable to authenticate user - No public keys found")
             return {}
 
     # If we've got this far then we've either authenticated the user by password or we're using SSH public key auth and
@@ -182,7 +183,7 @@ def lambda_handler(event, _context):
         ))
 
     if 'HomeDirectoryDetails' in resp_dict:
-        print(
+        logger.error(
             "HomeDirectoryDetails found - Applying setting for virtual folders",
         )
         resp_data['HomeDirectoryDetails'] = resp_dict['HomeDirectoryDetails']
@@ -199,13 +200,13 @@ def lambda_handler(event, _context):
     if resp_data.get('HomeDirectory') is not None:
         del resp_data['HomeDirectory']
 
-    print("Completed Response Data: " + json.dumps(resp_data))
+    logger.error("Completed Response Data: " + json.dumps(resp_data))
     return resp_data
 
 
 def get_secret(id):
     region = os.environ['SecretsManagerRegion']
-    print("Secrets Manager Region: " + region)
+    logger.error("Secrets Manager Region: " + region)
 
     client = boto3.session.Session().client(service_name='secretsmanager',
                                             region_name=region)
@@ -215,12 +216,12 @@ def get_secret(id):
         # Decrypts secret using the associated KMS CMK.
         # Depending on whether the secret is a string or binary, one of these fields will be populated.
         if 'SecretString' in resp:
-            print("Found Secret String")
+            logger.error("Found Secret String")
             return resp['SecretString']
         else:
-            print("Found Binary Secret")
+            logger.error("Found Binary Secret")
             return base64.b64decode(resp['SecretBinary'])
     except ClientError as err:
-        print('Error Talking to SecretsManager: ' + err.response['Error'][
+        logger.error('Error Talking to SecretsManager: ' + err.response['Error'][
             'Code'] + ', Message: ' + str(err))
         return None
