@@ -25,3 +25,20 @@ variable "name_suffix" {
   type        = string
   default     = ""
 }
+
+
+variable s3_bucket_name {
+  description = "Name of the S3 bucket to connect SFTP server to."
+}
+
+variable "sentry_dsn" {
+  description = "Provide a Sentry DSN to log errors and messages to Sentry."
+  default = ""
+  type = string
+}
+
+variable environment {
+  description = "Environment (for example, dev, staging, or production). Used in Sentry logging."
+  default = ""
+  type = string
+}
