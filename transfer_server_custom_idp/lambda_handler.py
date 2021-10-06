@@ -189,10 +189,10 @@ def construct_response(
         if 'PublicKey' in resp_dict:
             resp_data['PublicKeys'] = [resp_dict['PublicKey']]
         else:
-            logger.error('Unable to authenticate user - No public keys found')
             return {}
 
-    # If we've got this far then we've either authenticated the user by password or we're using SSH public key auth and
+    # If we've got this far then we've either authenticated the user by password
+    # or we're using SSH public key auth and
     # we've begun constructing the data response. Check for each key value pair.
     # These are required so set to empty string if missing
     resp_data['Role'] = resp_dict.get('Role')
@@ -232,7 +232,6 @@ def construct_response(
     if resp_data.get('HomeDirectory') is not None:
         del resp_data['HomeDirectory']
 
-    logger.error("Completed Response Data: " + json.dumps(resp_data))
     return resp_data
 
 
