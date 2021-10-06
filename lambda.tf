@@ -36,6 +36,7 @@ resource "aws_lambda_function" "sftp" {
       BUCKET_NAME = var.s3_bucket_name
       SENTRY_DSN = var.sentry_dsn
       ENV = var.environment
+      HOME_DIRECTORY_TEMPLATE = var.home_directory_template
     }
   }
 

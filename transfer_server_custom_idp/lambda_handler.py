@@ -6,6 +6,7 @@ import base64
 from botocore.exceptions import ClientError
 
 import sentry_sdk
+from jinja2 import Template, StrictUndefined
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,8 @@ def construct_policy(
 
 
 def generate_home_directory(
-    user_configuration: dict,
+    template: str,
+    secret: dict,
     user_name: str,
 ) -> str:
     """
@@ -84,21 +86,21 @@ def generate_home_directory(
     dynamic Jinja2 template supplied as a Terraform module parameter (and then
     as a Lambda function environment variable).
 
+    :param template: Jinja2 template to render the path;
     :param user_name: Name of the SFTP user;
-    :param user_configuration: User parameters from AWS Secrets Manager.
+    :param secret: User parameters from AWS Secrets Manager.
     :return: Full absolute path in the format AWS Transfer can understand.
     """
-    user_type = user_configuration.get('type')
-    if user_type not in ALLOWED_TYPES:
-        raise ValueError(
-            f'User {user_name} does not have a proper type. Allowed values: '
-            f'{", ".join(ALLOWED_TYPES)}, found: {user_type}.',
-        )
-
-    company_id = user_configuration['company_id']
-    dealer_id = user_configuration.get('dealer_id') or 'unknown-dealer'
-
-    return f'{user_type}/{company_id}/{dealer_id}/{user_name}'
+    return Template(
+        template,
+        undefined=StrictUndefined,
+        lstrip_blocks=True,
+        trim_blocks=True,
+        keep_trailing_newline=False,
+    ).render(
+        secret=secret,
+        user_name=user_name,
+    ).strip()
 
 
 def generate_absolute_path(home_directory: str, bucket_name: str) -> str:
@@ -119,9 +121,12 @@ def lambda_handler(event, _context):
     Construct the response and return it. Catch errors and make sure they reach
     Sentry.
     """
+    home_directory_template = os.getenv('HOME_DIRECTORY_TEMPLATE')
+
     try:
         return construct_response(
             event=event,
+            home_directory_template=home_directory_template,
         )
     except Exception as err:
         sentry_sdk.capture_exception(err)
@@ -129,7 +134,10 @@ def lambda_handler(event, _context):
     return {}
 
 
-def construct_response(event):
+def construct_response(
+    event: dict,
+    home_directory_template: str,
+):
     resp_data = {}
     bucket_name = os.getenv('BUCKET_NAME')
 
@@ -181,10 +189,10 @@ def construct_response(event):
         if 'PublicKey' in resp_dict:
             resp_data['PublicKeys'] = [resp_dict['PublicKey']]
         else:
-            logger.error('Unable to authenticate user - No public keys found')
             return {}
 
-    # If we've got this far then we've either authenticated the user by password or we're using SSH public key auth and
+    # If we've got this far then we've either authenticated the user by password
+    # or we're using SSH public key auth and
     # we've begun constructing the data response. Check for each key value pair.
     # These are required so set to empty string if missing
     resp_data['Role'] = resp_dict.get('Role')
@@ -194,7 +202,8 @@ def construct_response(event):
         resp_data['Policy'] = resp_dict['Policy']
 
     home_directory = generate_home_directory(
-        user_configuration=resp_dict,
+        template=home_directory_template,
+        secret=resp_dict,
         user_name=input_username,
     )
 
@@ -223,7 +232,6 @@ def construct_response(event):
     if resp_data.get('HomeDirectory') is not None:
         del resp_data['HomeDirectory']
 
-    logger.error("Completed Response Data: " + json.dumps(resp_data))
     return resp_data
 
 
