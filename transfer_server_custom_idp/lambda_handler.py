@@ -123,13 +123,16 @@ def lambda_handler(event, _context):
     # It is recommended to verify server ID against some value, this template
     # does not verify server ID
     input_username = event['username']
-    logger.error(
-        "Username: {}, ServerId: {}".format(input_username, event['serverId']));
+    logger.info(
+        'User name: %s, server ID: %s',
+        input_username,
+        event['serverId'],
+    )
 
     if 'password' in event:
         input_password = event['password']
     else:
-        logger.error("No password, checking for SSH public key")
+        logger.info("No password, checking for SSH public key")
         input_password = ''
 
     # Lookup user's secret which can contain the password or SSH public keys
@@ -146,19 +149,22 @@ def lambda_handler(event, _context):
             resp_password = resp_dict['password']
         else:
             logger.error(
-                "Unable to authenticate user - No field match in Secret for password")
+                'Unable to authenticate user - No field match in Secret for '
+                'password',
+            )
             return {}
 
         if resp_password != input_password:
             logger.error(
-                "Unable to authenticate user - Incoming password does not match stored")
+                'Unable to authenticate user - Incoming password does not '
+                'match stored')
             return {}
     else:
         # SSH Public Key Auth Flow - The incoming password was empty so we are trying ssh auth and need to return the public key data if we have it
         if 'PublicKey' in resp_dict:
             resp_data['PublicKeys'] = [resp_dict['PublicKey']]
         else:
-            logger.error("Unable to authenticate user - No public keys found")
+            logger.error('Unable to authenticate user - No public keys found')
             return {}
 
     # If we've got this far then we've either authenticated the user by password or we're using SSH public key auth and
@@ -206,7 +212,7 @@ def lambda_handler(event, _context):
 
 def get_secret(id):
     region = os.environ['SecretsManagerRegion']
-    logger.error("Secrets Manager Region: " + region)
+    logger.info("Secrets Manager Region: " + region)
 
     client = boto3.session.Session().client(service_name='secretsmanager',
                                             region_name=region)
@@ -216,10 +222,10 @@ def get_secret(id):
         # Decrypts secret using the associated KMS CMK.
         # Depending on whether the secret is a string or binary, one of these fields will be populated.
         if 'SecretString' in resp:
-            logger.error("Found Secret String")
+            logger.info("Found Secret String")
             return resp['SecretString']
         else:
-            logger.error("Found Binary Secret")
+            logger.info("Found Binary Secret")
             return base64.b64decode(resp['SecretBinary'])
     except ClientError as err:
         logger.error('Error Talking to SecretsManager: ' + err.response['Error'][
