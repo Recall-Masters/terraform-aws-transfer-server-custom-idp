@@ -115,8 +115,8 @@ def lambda_handler(event, _context):
         return {}
 
     if input_password != '':
-        if 'Password' in resp_dict:
-            resp_password = resp_dict['Password']
+        if 'password' in resp_dict:
+            resp_password = resp_dict['password']
         else:
             print(
                 "Unable to authenticate user - No field match in Secret for password")
