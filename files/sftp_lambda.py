@@ -5,6 +5,14 @@ import base64
 from botocore.exceptions import ClientError
 
 
+ALLOWED_TYPES = frozenset({
+    'vin_check',
+    'inventory_check',
+    'dms',
+    'prospect',
+})
+
+
 def construct_policy(
     bucket_name: str,
     home_directory: str,
@@ -45,6 +53,36 @@ def construct_policy(
             'Sid': 'HomeDirObjectAccess',
         }],
     }
+
+
+def generate_home_directory_path(
+    user_configuration: dict,
+    user_name: str,
+    bucket_name: str,
+) -> str:
+    """
+    Generate the home path for the user.
+
+    This function is currently hard code. Later, it should be replaced with a
+    dynamic Jinja2 template supplied as a Terraform module parameter (and then
+    as a Lambda function environment variable).
+
+    :param user_name: Name of the SFTP user;
+    :param bucket_name: S3 bucket to store the user's data at;
+    :param user_configuration: User parameters from AWS Secrets Manager.
+    :return: Full absolute path in the format AWS Transfer can understand.
+    """
+    user_type = user_configuration.get('type')
+    if user_type not in ALLOWED_TYPES:
+        raise ValueError(
+            f'User {user_name} does not have a proper type. Allowed values: '
+            f'{", ".join(ALLOWED_TYPES)}, found: {user_type}.',
+        )
+
+    company_id = user_configuration['company_id']
+    dealer_id = user_configuration.get('dealer_id') or 'unknown-dealer'
+
+    return f'/{bucket_name}/{user_type}/{company_id}/{dealer_id}/{user_name}'
 
 
 def lambda_handler(event, _context):
@@ -129,7 +167,11 @@ def lambda_handler(event, _context):
     resp_data['HomeDirectoryType'] = 'LOGICAL'
     resp_data['HomeDirectoryDetails'] = json.dumps([{
         'Entry': '/',
-        'Target': f'/{bucket_name}/{home_directory}',
+        'Target': generate_home_directory_path(
+            user_configuration=resp_dict,
+            bucket_name=bucket_name,
+            user_name=input_username,
+        ),
     }])
     del resp_data['HomeDirectory']
 
