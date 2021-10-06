@@ -113,6 +113,23 @@ def generate_absolute_path(home_directory: str, bucket_name: str) -> str:
 
 
 def lambda_handler(event, _context):
+    """
+    Lambda entry point.
+
+    Construct the response and return it. Catch errors and make sure they reach
+    Sentry.
+    """
+    try:
+        return construct_response(
+            event=event,
+        )
+    except Exception as err:
+        sentry_sdk.capture_exception(err)
+
+    return {}
+
+
+def construct_response(event):
     resp_data = {}
     bucket_name = os.getenv('BUCKET_NAME')
 
