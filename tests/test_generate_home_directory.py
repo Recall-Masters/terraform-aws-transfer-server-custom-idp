@@ -1,6 +1,6 @@
 import pytest
 
-from transfer_server_custom_idp.lambda_handler import generate_home_directory
+from transfer_server_custom_idp.home_directory import generate_home_directory
 
 
 def test_user_name():

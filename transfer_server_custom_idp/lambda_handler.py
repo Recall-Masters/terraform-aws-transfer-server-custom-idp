@@ -3,14 +3,17 @@ import os
 import json
 import boto3
 import base64
-from botocore.exceptions import ClientError
 
 import sentry_sdk
-from jinja2 import Template, StrictUndefined
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
-logger = logging.getLogger(__name__)
+from transfer_server_custom_idp.errors import UserNotFound
+from transfer_server_custom_idp.home_directory import (
+    generate_home_directory,
+    generate_absolute_path,
+)
 
+logger = logging.getLogger(__name__)
 
 SENTRY_DSN = os.getenv('SENTRY_DSN')
 ENV = os.getenv('ENV')
@@ -22,14 +25,6 @@ if SENTRY_DSN:
         environment=ENV,
         sample_rate=1.0,
     )
-
-
-ALLOWED_TYPES = frozenset({
-    'vin_check',
-    'inventory_check',
-    'dms',
-    'prospect',
-})
 
 
 def construct_policy(
@@ -72,46 +67,6 @@ def construct_policy(
             'Sid': 'HomeDirObjectAccess',
         }],
     }
-
-
-def generate_home_directory(
-    template: str,
-    secret: dict,
-    user_name: str,
-) -> str:
-    """
-    Generate the home path for the user.
-
-    This function is currently hard code. Later, it should be replaced with a
-    dynamic Jinja2 template supplied as a Terraform module parameter (and then
-    as a Lambda function environment variable).
-
-    :param template: Jinja2 template to render the path;
-    :param user_name: Name of the SFTP user;
-    :param secret: User parameters from AWS Secrets Manager.
-    :return: Full absolute path in the format AWS Transfer can understand.
-    """
-    return Template(
-        template,
-        undefined=StrictUndefined,
-        lstrip_blocks=True,
-        trim_blocks=True,
-        keep_trailing_newline=False,
-    ).render(
-        secret=secret,
-        user_name=user_name,
-    ).strip()
-
-
-def generate_absolute_path(home_directory: str, bucket_name: str) -> str:
-    """
-    Generate absolute S3 path in the format that SFTP Transfer accepts.
-
-    :param bucket_name: bucket;
-    :param home_directory: directory in the bucket.
-    :return: path.
-    """
-    return f'/{bucket_name}/{home_directory}'
 
 
 def lambda_handler(event, _context):
@@ -161,7 +116,11 @@ def construct_response(
         input_password = ''
 
     # Lookup user's secret which can contain the password or SSH public keys
-    resp = get_secret("SFTP/" + input_username)
+    resp = get_secret(
+        username=input_username,
+        secrets_manager_prefix='SFTP',
+        aws_region=os.environ['SECRETS_MANAGER_REGION'],
+    )
 
     if resp is not None:
         resp_dict = json.loads(resp)
@@ -185,7 +144,9 @@ def construct_response(
                 'match stored')
             return {}
     else:
-        # SSH Public Key Auth Flow - The incoming password was empty so we are trying ssh auth and need to return the public key data if we have it
+        # SSH Public Key Auth Flow - The incoming password was empty
+        # so we are trying ssh auth and need to return the public key data
+        # if we have it
         if 'PublicKey' in resp_dict:
             resp_data['PublicKeys'] = [resp_dict['PublicKey']]
         else:
@@ -235,24 +196,28 @@ def construct_response(
     return resp_data
 
 
-def get_secret(id):
-    region = os.environ['SecretsManagerRegion']
-    logger.info("Secrets Manager Region: " + region)
-
-    client = boto3.session.Session().client(service_name='secretsmanager',
-                                            region_name=region)
+def get_secret(
+    username: str,
+    secrets_manager_prefix: str,
+    aws_region: str,
+):
+    """Retrieve user information from AWS Secrets Manager."""
+    secret_id = f'{secrets_manager_prefix}/{username}'
+    client = boto3.session.Session().client(
+        service_name='secretsmanager',
+        region_name=aws_region,
+    )
 
     try:
-        resp = client.get_secret_value(SecretId=id)
-        # Decrypts secret using the associated KMS CMK.
-        # Depending on whether the secret is a string or binary, one of these fields will be populated.
-        if 'SecretString' in resp:
-            logger.info("Found Secret String")
-            return resp['SecretString']
-        else:
-            logger.info("Found Binary Secret")
-            return base64.b64decode(resp['SecretBinary'])
-    except ClientError as err:
-        logger.error('Error Talking to SecretsManager: ' + err.response['Error'][
-            'Code'] + ', Message: ' + str(err))
-        return None
+        resp = client.get_secret_value(SecretId=secret_id)
+    except client.exceptions.ResourceNotFoundException as err:
+        raise UserNotFound(username=username) from err
+
+    # Depending on whether the secret is a string or binary,
+    # one of these fields will be populated.
+    if 'SecretString' in resp:
+        logger.info("Found Secret String")
+        return resp['SecretString']
+    else:
+        logger.info("Found Binary Secret")
+        return base64.b64decode(resp['SecretBinary'])
