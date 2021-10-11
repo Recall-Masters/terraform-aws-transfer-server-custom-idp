@@ -147,6 +147,11 @@ def construct_response(
     if response.get('HomeDirectory') is not None:
         del response['HomeDirectory']
 
+    logger.info(
+        'Login authenticated successfully',
+        response=response,
+    )
+
     return response
 
 

@@ -10,7 +10,7 @@ from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 def create_logger(
     environment: str,
     sentry_dsn: Optional[str],
-) -> structlog.BoundLogger:
+) -> structlog.stdlib.BoundLogger:
     """Create a logger."""
     if sentry_dsn:
         sentry_sdk.init(
