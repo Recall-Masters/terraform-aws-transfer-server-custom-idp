@@ -1,30 +1,17 @@
-import logging
-import os
-import json
-import boto3
 import base64
+import json
+import os
 
+import boto3
 import sentry_sdk
-from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
+from structlog import BoundLogger
 
 from transfer_server_custom_idp.errors import UserNotFound
 from transfer_server_custom_idp.home_directory import (
     generate_home_directory,
     generate_absolute_path,
 )
-
-logger = logging.getLogger(__name__)
-
-SENTRY_DSN = os.getenv('SENTRY_DSN')
-ENV = os.getenv('ENV')
-
-if SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        integrations=[AwsLambdaIntegration()],
-        environment=ENV,
-        sample_rate=1.0,
-    )
+from transfer_server_custom_idp.log import create_logger
 
 
 def construct_policy(
@@ -78,10 +65,16 @@ def lambda_handler(event, _context):
     """
     home_directory_template = os.getenv('HOME_DIRECTORY_TEMPLATE')
 
+    logger = create_logger(
+        sentry_dsn=os.getenv('SENTRY_DSN'),
+        environment=os.getenv('ENV'),
+    )
+
     try:
         return construct_response(
             event=event,
             home_directory_template=home_directory_template,
+            logger=logger,
         )
     except Exception as err:
         sentry_sdk.capture_exception(err)
@@ -92,6 +85,7 @@ def lambda_handler(event, _context):
 def construct_response(
     event: dict,
     home_directory_template: str,
+    logger: BoundLogger,
 ):
     resp_data = {}
     bucket_name = os.getenv('BUCKET_NAME')
@@ -120,6 +114,7 @@ def construct_response(
         username=input_username,
         secrets_manager_prefix='SFTP',
         aws_region=os.environ['SECRETS_MANAGER_REGION'],
+        logger=logger,
     )
 
     if resp is not None:
@@ -200,6 +195,7 @@ def get_secret(
     username: str,
     secrets_manager_prefix: str,
     aws_region: str,
+    logger: BoundLogger,
 ):
     """Retrieve user information from AWS Secrets Manager."""
     secret_id = f'{secrets_manager_prefix}/{username}'
