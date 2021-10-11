@@ -40,6 +40,6 @@ def lambda_handler(event, _context):
             'Authentication failed',
             error_type=err.__class__.__name__,
         )
-        sentry_sdk.capture_exception(err)
+        # sentry_sdk.capture_exception(err)
 
     return {}

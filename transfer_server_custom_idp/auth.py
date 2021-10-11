@@ -5,7 +5,10 @@ import os
 import boto3
 from structlog import BoundLogger
 
-from transfer_server_custom_idp.errors import UserNotFound
+from transfer_server_custom_idp.errors import (
+    UserNotFound, IncorrectPassword,
+    MissingCredentials,
+)
 from transfer_server_custom_idp.home_directory import (
     generate_home_directory,
     generate_absolute_path,
@@ -86,17 +89,10 @@ def construct_response(
         if 'password' in secret_configuration:
             resp_password = secret_configuration['password']
         else:
-            logger.error(
-                'Unable to authenticate user - No field match in Secret for '
-                'password',
-            )
-            return {}
+            raise MissingCredentials()
 
         if resp_password != input_password:
-            logger.error(
-                'Unable to authenticate user - Incoming password does not '
-                'match stored')
-            return {}
+            raise IncorrectPassword()
     else:
         # SSH Public Key Auth Flow - The incoming password was empty
         # so we are trying ssh auth and need to return the public key data
@@ -130,10 +126,7 @@ def construct_response(
         ))
 
     if 'HomeDirectoryDetails' in secret_configuration:
-        logger.error(
-            "HomeDirectoryDetails found - Applying setting for virtual folders",
-        )
-        response['HomeDirectoryDetails'] = secret_configuration['HomeDirectoryDetails']
+        raise ValueError('`HomeDirectoryDetails` is not supported.')
 
     response['HomeDirectoryType'] = 'LOGICAL'
     response['HomeDirectoryDetails'] = json.dumps([{
@@ -148,7 +141,7 @@ def construct_response(
         del response['HomeDirectory']
 
     logger.info(
-        'Login authenticated successfully',
+        'User has been successfully authenticated',
         response=response,
     )
 
