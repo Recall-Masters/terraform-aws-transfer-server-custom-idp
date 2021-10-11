@@ -35,7 +35,7 @@ def create_logger(
             structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.UnicodeDecoder(),
-            structlog.stdlib.render_to_log_kwargs,
+            # structlog.stdlib.render_to_log_kwargs,
 
             SentryProcessor(level=logging.ERROR),
             structlog.processors.format_exc_info,
