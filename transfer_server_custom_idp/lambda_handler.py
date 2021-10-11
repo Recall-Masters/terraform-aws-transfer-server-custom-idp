@@ -17,8 +17,6 @@ def lambda_handler(event, _context):
     home_directory_template = os.getenv('HOME_DIRECTORY_TEMPLATE')
     bucket_name = os.getenv('BUCKET_NAME')
 
-    raise ValueError(event)
-
     login = Login(**event)
 
     logger = create_logger(
