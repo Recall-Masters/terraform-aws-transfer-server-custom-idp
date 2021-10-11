@@ -687,6 +687,17 @@ docs = ["furo", "sphinx", "sphinx-toolbox", "twisted"]
 tests = ["coverage", "freezegun (>=0.2.8)", "pretend", "pytest-asyncio", "pytest-randomly", "pytest (>=6.0)", "simplejson"]
 
 [[package]]
+name = "structlog-sentry"
+version = "1.4.0"
+description = "Sentry integration for structlog"
+category = "main"
+optional = false
+python-versions = ">=3.6,<4.0"
+
+[package.dependencies]
+sentry-sdk = "*"
+
+[[package]]
 name = "testfixtures"
 version = "6.18.3"
 description = "A collection of helpers and mock objects for unit tests and doc tests."
@@ -768,7 +779,7 @@ typing_extensions = ">=3.6,<4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.9"
-content-hash = "b63dbc111d15b3bf1558573b27a72e126e44a88e6a287f810d64711372aee14a"
+content-hash = "1d5506f720821b5a109fbf019ca900bfb786608bfe859f2ebcbb19facf0c1bad"
 
 [metadata.files]
 astor = [
@@ -1125,6 +1136,10 @@ stevedore = [
 structlog = [
     {file = "structlog-21.1.0-py2.py3-none-any.whl", hash = "sha256:62f06fc0ee32fb8580f0715eea66cb87271eb7efb0eaf9af6b639cba8981de47"},
     {file = "structlog-21.1.0.tar.gz", hash = "sha256:d9d2d890532e8db83c6977a2a676fb1889922ff0c26ad4dc0ecac26f9fafbc57"},
+]
+structlog-sentry = [
+    {file = "structlog-sentry-1.4.0.tar.gz", hash = "sha256:5fc6cfab71b858d71433e68cc5af79a396e72015003931507e340b3687ebb0a8"},
+    {file = "structlog_sentry-1.4.0-py3-none-any.whl", hash = "sha256:04627538e13bb0719a8806353279d40c1d1afb3eb2053817820754b9a08814a7"},
 ]
 testfixtures = [
     {file = "testfixtures-6.18.3-py2.py3-none-any.whl", hash = "sha256:6ddb7f56a123e1a9339f130a200359092bd0a6455e31838d6c477e8729bb7763"},

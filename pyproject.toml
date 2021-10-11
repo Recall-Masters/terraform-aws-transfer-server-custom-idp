@@ -13,6 +13,7 @@ Jinja2 = "^3.0.1"
 pydantic = "^1.8.2"
 documented = "^0.1.1"
 structlog = "^21.1.0"
+structlog-sentry = "^1.4.0"
 
 
 [tool.poetry.dev-dependencies]

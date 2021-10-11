@@ -5,6 +5,7 @@ from typing import Optional
 import sentry_sdk
 import structlog
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
+from structlog_sentry import SentryProcessor
 
 
 def create_logger(
@@ -33,9 +34,11 @@ def create_logger(
             structlog.stdlib.add_log_level,
             structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
             structlog.stdlib.render_to_log_kwargs,
+
+            SentryProcessor(level=logging.ERROR),
+            structlog.processors.format_exc_info,
 
             structlog.processors.JSONRenderer(),
         ],
