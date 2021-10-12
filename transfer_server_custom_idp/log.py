@@ -25,6 +25,7 @@ def create_logger(
         format="%(message)s",
         stream=sys.stdout,
         level=logging.INFO,
+        force=True,
     )
 
     structlog.configure(
@@ -38,7 +39,6 @@ def create_logger(
 
             SentryJsonProcessor(level=logging.ERROR),
 
-            structlog.stdlib.render_to_log_kwargs,
             structlog.processors.format_exc_info,
 
             structlog.processors.JSONRenderer(),
