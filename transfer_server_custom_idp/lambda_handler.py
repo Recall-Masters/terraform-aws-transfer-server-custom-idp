@@ -1,7 +1,5 @@
 import os
 
-import sentry_sdk
-
 from transfer_server_custom_idp.auth import construct_response
 from transfer_server_custom_idp.log import create_logger
 from transfer_server_custom_idp.models import Login
@@ -40,6 +38,5 @@ def lambda_handler(event, _context):
             'Authentication failed',
             error_type=err.__class__.__name__,
         )
-        # sentry_sdk.capture_exception(err)
 
     return {}
