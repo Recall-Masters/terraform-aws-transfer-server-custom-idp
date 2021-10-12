@@ -13,7 +13,7 @@ from transfer_server_custom_idp.home_directory import (
     generate_home_directory,
     generate_absolute_path,
 )
-from transfer_server_custom_idp.models import Login
+from transfer_server_custom_idp.models import Login, AWSTransferResponse
 
 
 def construct_policy(
@@ -85,22 +85,16 @@ def construct_response(
         logger.error("Secrets Manager exception thrown")
         return {}
 
-    if input_password:
-        if 'password' in secret_configuration:
-            resp_password = secret_configuration['password']
-        else:
-            raise MissingCredentials()
+    user_password = secret_configuration.get('password')
+    if user_password and (user_password != login.password):
+        raise IncorrectPassword()
 
-        if resp_password != input_password:
-            raise IncorrectPassword()
-    else:
-        # SSH Public Key Auth Flow - The incoming password was empty
-        # so we are trying ssh auth and need to return the public key data
-        # if we have it
-        if 'PublicKey' in secret_configuration:
-            response['PublicKeys'] = [secret_configuration['PublicKey']]
-        else:
-            return {}
+    response_object = AWSTransferResponse()
+    if key := secret_configuration.get('key'):
+        response_object.public_keys = [key]
+
+    elif not user_password:
+        raise MissingCredentials()
 
     # If we've got this far then we've either authenticated the user by password
     # or we're using SSH public key auth and
@@ -139,6 +133,8 @@ def construct_response(
 
     if response.get('HomeDirectory') is not None:
         del response['HomeDirectory']
+
+    response.update(response_object.dict(by_alias=True))
 
     logger.info(
         'User has been successfully authenticated',
