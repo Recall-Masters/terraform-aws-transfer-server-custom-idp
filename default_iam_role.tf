@@ -52,7 +52,7 @@ resource "aws_iam_role_policy" "sftp_transfer_server_user" {
           "s3:GetObjectVersion",
         ]
         Effect   = "Allow"
-        Resource = "arn:aws:s3:::${var.s3_bucket_name}/*"
+        Resource = "arn:aws:s3:::${var.s3_bucket_name}*"
         Sid      = "HomeDirObjectAccess"
       },
     ]
