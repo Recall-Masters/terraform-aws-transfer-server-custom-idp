@@ -42,6 +42,14 @@ def construct_policy(
             'Effect': 'Allow',
             'Sid': 'ListHomeDir',
         }, {
+            "Sid": "AWSTransferRequirements",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketLocation",
+            ],
+            "Resource": "*",
+        }, {
             'Resource': 'arn:aws:s3:::*',
             'Action': [
                 's3:PutObject',
