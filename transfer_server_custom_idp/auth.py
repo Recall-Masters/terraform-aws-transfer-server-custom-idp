@@ -33,6 +33,7 @@ def construct_policy(
                 'StringLike': {
                     's3:prefix': [
                         f'{home_directory}/*',
+                        f'{home_directory}/',
                         f'{home_directory}',
                     ],
                 },
