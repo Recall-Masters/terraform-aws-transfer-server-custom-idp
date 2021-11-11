@@ -34,6 +34,7 @@ def construct_policy(
                     's3:prefix': [
                         f'{home_directory}/*',
                         f'{home_directory}/',
+                        f'{home_directory}',
                     ],
                 },
             },
@@ -41,6 +42,14 @@ def construct_policy(
             'Action': 's3:ListBucket',
             'Effect': 'Allow',
             'Sid': 'ListHomeDir',
+        }, {
+            "Sid": "AWSTransferRequirements",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketLocation",
+            ],
+            "Resource": "*",
         }, {
             'Resource': 'arn:aws:s3:::*',
             'Action': [
