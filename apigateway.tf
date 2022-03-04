@@ -43,10 +43,32 @@ resource "aws_api_gateway_model" "userconfig" {
   )
 }
 
+resource "aws_api_gateway_client_certificate" "sftp_transfer_api_cert" {
+  description = "Certificate for SFTP transfer server api client"
+}
+
 resource "aws_api_gateway_stage" "prod" {
   stage_name    = "prod"
   rest_api_id   = aws_api_gateway_rest_api.sftp.id
   deployment_id = aws_api_gateway_deployment.sftp.id
+
+  client_certificate_id = aws_api_gateway_client_certificate.sftp_transfer_api_cert.id
+  xray_tracing_enabled  = true
+  tags = merge(
+    var.input_tags,
+    {
+      "Name" = "${var.name_prefix}-sftp-transfer-server-custom-idp-api-stage${var.name_suffix}"
+    },
+  )
+}
+
+resource "aws_api_gateway_stage" "dummy" {
+  stage_name    = "dummystagefordeployment"
+  rest_api_id   = aws_api_gateway_rest_api.sftp.id
+  deployment_id = aws_api_gateway_deployment.sftp.id
+
+  client_certificate_id = aws_api_gateway_client_certificate.sftp_transfer_api_cert.id
+  xray_tracing_enabled  = true
   tags = merge(
     var.input_tags,
     {
@@ -58,7 +80,17 @@ resource "aws_api_gateway_stage" "prod" {
 resource "aws_api_gateway_deployment" "sftp" {
   depends_on  = [aws_api_gateway_integration.sftp]
   rest_api_id = aws_api_gateway_rest_api.sftp.id
-  stage_name  = "dummystagefordeployment"
+  #stage_name  = "dummystagefordeployment"
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.config.id,
+      aws_api_gateway_method.get.id,
+      aws_api_gateway_integration.sftp.id,
+    ]))
+  }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_resource" "servers" {
@@ -109,6 +141,16 @@ resource "aws_api_gateway_method_settings" "get" {
 
   settings {
     metrics_enabled = true
+    logging_level   = "ERROR"
+  }
+}
+
+resource "aws_api_gateway_method_settings" "dummy_get" {
+  rest_api_id = aws_api_gateway_rest_api.sftp.id
+  stage_name  = aws_api_gateway_stage.dummy.stage_name
+  method_path = "*/*"
+
+  settings {
     logging_level   = "ERROR"
   }
 }
