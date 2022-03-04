@@ -80,7 +80,7 @@ resource "aws_api_gateway_stage" "dummy" {
 resource "aws_api_gateway_deployment" "sftp" {
   depends_on  = [aws_api_gateway_integration.sftp]
   rest_api_id = aws_api_gateway_rest_api.sftp.id
-  #stage_name  = "dummystagefordeployment"
+  stage_name  = "dummystagefordeployment"
   triggers = {
     redeployment = sha1(jsonencode([
       aws_api_gateway_resource.config.id,
