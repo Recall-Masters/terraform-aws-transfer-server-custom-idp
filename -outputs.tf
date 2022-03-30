@@ -14,6 +14,10 @@ output "rest_api_stage_arn" {
   value = aws_api_gateway_stage.prod.arn
 }
 
+output "rest_api_dummy_stage_arn" {
+  value = aws_api_gateway_stage.dummy.arn
+}
+
 output "rest_api_http_method" {
   value = aws_api_gateway_method.get.http_method
 }
