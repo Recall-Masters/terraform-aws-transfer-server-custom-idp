@@ -9,7 +9,7 @@ Create a SFTP server with the custom identity provider.
 module "transfer-server-custom-idp" {
   name_prefix = var.name_prefix
   source  = "Recall-Masters/transfer-server-custom-idp/aws"
-  version = "1.0.2"
+  version = "1.0.3"
 
   region = var.region
   
