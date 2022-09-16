@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "transfer-server-custom-idp"
-version = "0.0.3"
+version = "0.0.4"
 description = "Secrets Manager identity provider for AWS Transfer Family"
 authors = [
     "Anatoly Scherbakov <altaisoft@gmail.com>"

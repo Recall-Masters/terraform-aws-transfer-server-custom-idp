@@ -20,7 +20,6 @@ def generate_home_directory(
     """
     return Template(
         template,
-        undefined=StrictUndefined,
         lstrip_blocks=True,
         trim_blocks=True,
         keep_trailing_newline=False,
