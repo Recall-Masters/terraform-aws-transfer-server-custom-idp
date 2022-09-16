@@ -12,6 +12,8 @@ class UserNotFound(DocumentedError):
 class IncorrectPassword(DocumentedError):
     """Provided password is incorrect."""
 
+class IncorrectUserConfiguration(DocumentedError):
+    """Both `company_id` and `dealer_id` are not provided."""
 
 @dataclass
 class MissingCredentials(DocumentedError):

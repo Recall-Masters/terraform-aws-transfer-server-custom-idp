@@ -6,7 +6,7 @@ import boto3
 from structlog import BoundLogger
 
 from transfer_server_custom_idp.errors import (
-    UserNotFound, IncorrectPassword,
+    IncorrectUserConfiguration, UserNotFound, IncorrectPassword,
     MissingCredentials,
 )
 from transfer_server_custom_idp.home_directory import (
@@ -97,6 +97,15 @@ def construct_response(
     user_password = secret_configuration.get('password')
     if user_password and (user_password != login.password):
         raise IncorrectPassword()
+
+    if not secret_configuration.get('company_id'):
+        if dealer_id := secret_configuration.get('dealer_id'):
+            secret_configuration['company_id'] = dealer_id
+        else:
+            logger.error("Company id or dealer id "
+                         "are not presented in SFTP user "
+                         "configuration.")
+            raise IncorrectUserConfiguration()
 
     response_object = AWSTransferResponse()
     if key := secret_configuration.get('key'):
