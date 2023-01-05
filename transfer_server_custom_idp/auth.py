@@ -5,7 +5,6 @@ import os
 import boto3
 from structlog import BoundLogger
 
-from transfer_server_custom_idp import s3_service
 from transfer_server_custom_idp.errors import (
     IncorrectUserConfiguration, UserNotFound, IncorrectPassword,
     MissingCredentials,
@@ -17,10 +16,14 @@ from transfer_server_custom_idp.home_directory import (
 from transfer_server_custom_idp.models import Login, AWSTransferResponse
 from transfer_server_custom_idp.s3_service import s3_handler_functions
 
+INCOMING_FOLDER = 'incoming'
+SFTP_COMPANY_PREFIX = "sftp/company="
+
 DMS_FOLDERS = [
     "processed",
     "error",
 ]
+
 DEALER_FOLDERS = [
     'Communication Plan',
     'Complete Reports',
@@ -31,15 +34,22 @@ DEALER_FOLDERS = [
     'Service Transactions',
 ]
 
+
 COMPANY_FOLDERS = [
-    "inventory",
-    "check",
+    'processing',
+    'outgoing',
+    'error',
+    'incoming_repaired',
+    'incoming_repaired/incoming',
+    'incoming_repaired/error',
+    'incoming_repaired/processing',
+    'incoming_repaired/outgoing'
 ]
 
 HOME_DIRECTORY_TO_FOLDERS_MAPPING = {
     "sftp/dms/": DMS_FOLDERS,
     "sftp/dealer=": DEALER_FOLDERS,
-    "ftp/company=": COMPANY_FOLDERS,
+    SFTP_COMPANY_PREFIX: COMPANY_FOLDERS,
 }
 
 
@@ -181,11 +191,21 @@ def construct_response(
         path=home_directory,
     ):
         for mapping_key in HOME_DIRECTORY_TO_FOLDERS_MAPPING.keys():
-            if mapping_key in home_directory:
+            if mapping_key in home_directory and mapping_key != SFTP_COMPANY_PREFIX:
                 for folder in HOME_DIRECTORY_TO_FOLDERS_MAPPING[mapping_key]:
                     s3_handler_functions.create_folder_in_s3(
                         bucket_name=bucket_name,
-                        folder_path=f"{home_directory}/{folder}/"
+                        folder_path=(
+                            f"{home_directory}/{folder}/"
+                        ),
+                    )
+            if SFTP_COMPANY_PREFIX in home_directory:
+                for folder in HOME_DIRECTORY_TO_FOLDERS_MAPPING[SFTP_COMPANY_PREFIX]:
+                    s3_handler_functions.create_folder_in_s3(
+                        bucket_name=bucket_name,
+                        folder_path=(
+                            f"{home_directory.rsplit('/', 1)[0]}/{folder}/"
+                        ),
                     )
 
     if response.get('HomeDirectory') is not None:
