@@ -72,7 +72,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "sftp_lambda_role_policy" {
-  name = "LambdaSecretsPolicy"
+  name = "TransferIdpLambdaPolicy"
   role = aws_iam_role.sftp_lambda_role.id
 
   policy = data.aws_iam_policy_document.idp-lambda-access.json
