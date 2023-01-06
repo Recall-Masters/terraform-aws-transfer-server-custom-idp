@@ -75,20 +75,30 @@ resource "aws_iam_role_policy" "sftp_lambda_role_policy" {
   name = "LambdaSecretsPolicy"
   role = aws_iam_role.sftp_lambda_role.id
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": [
-                "secretsmanager:GetSecretValue"
-            ],
-            "Resource": "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.secrets_prefix}/*",
-            "Effect": "Allow"
-        }
-    ]
+  policy = data.aws_iam_policy_document.idp-lambda-access.json
 }
-EOF
+
+data "aws_iam_policy_document" "idp-lambda-access" {
+  statement {
+    effect  = "Allow"
+    actions = [
+      "s3:Get*",
+      "s3:List*",
+      "s3:Put*"
+    ]
+    resources = [
+      "arn:aws:s3:::${var.s3_bucket_name}",
+    ]
+  }
+  statement {
+    effect  = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue",
+    ]
+    resources = [
+      "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${var.secrets_prefix}/*",
+    ]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "sftp_lambda_role" {

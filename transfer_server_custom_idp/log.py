@@ -36,11 +36,8 @@ def create_logger(
             structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.UnicodeDecoder(),
-
             SentryJsonProcessor(level=logging.ERROR),
-
             structlog.processors.format_exc_info,
-
             structlog.processors.JSONRenderer(),
         ],
         context_class=dict,

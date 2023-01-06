@@ -1,19 +1,24 @@
-import base64
 import json
 import os
 
-import boto3
 from structlog import BoundLogger
 
 from transfer_server_custom_idp.errors import (
-    IncorrectUserConfiguration, UserNotFound, IncorrectPassword,
+    IncorrectUserConfiguration,
+    IncorrectPassword,
     MissingCredentials,
 )
 from transfer_server_custom_idp.home_directory import (
     generate_home_directory,
     generate_absolute_path,
 )
-from transfer_server_custom_idp.models import Login, AWSTransferResponse
+from transfer_server_custom_idp.models.secret_model import (
+    AWSTransferResponse,
+    Login,
+    Secret,
+)
+from transfer_server_custom_idp.s3_service import s3_handler_functions
+from transfer_server_custom_idp.secrets_manager_service import secrets_manager_handler
 
 
 def construct_policy(
@@ -27,43 +32,47 @@ def construct_policy(
     custom-identity-provider-users.html#authentication-api-method
     """
     return {
-        'Version': '2012-10-17',
-        'Statement': [{
-            'Condition': {
-                'StringLike': {
-                    's3:prefix': [
-                        f'{home_directory}/*',
-                        f'{home_directory}/',
-                        f'{home_directory}',
-                    ],
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Condition": {
+                    "StringLike": {
+                        "s3:prefix": [
+                            f"{home_directory}/*",
+                            f"{home_directory}/",
+                            f"{home_directory}",
+                        ],
+                    },
                 },
+                "Resource": f"arn:aws:s3:::{bucket_name}",
+                "Action": "s3:ListBucket",
+                "Effect": "Allow",
+                "Sid": "ListHomeDir",
             },
-            'Resource': f'arn:aws:s3:::{bucket_name}',
-            'Action': 's3:ListBucket',
-            'Effect': 'Allow',
-            'Sid': 'ListHomeDir',
-        }, {
-            "Sid": "AWSTransferRequirements",
-            "Effect": "Allow",
-            "Action": [
-                "s3:ListAllMyBuckets",
-                "s3:GetBucketLocation",
-            ],
-            "Resource": "*",
-        }, {
-            'Resource': 'arn:aws:s3:::*',
-            'Action': [
-                's3:PutObject',
-                's3:GetObject',
-                's3:DeleteObjectVersion',
-                's3:DeleteObject',
-                's3:GetObjectVersion',
-                's3:GetObjectACL',
-                's3:PutObjectACL',
-            ],
-            'Effect': 'Allow',
-            'Sid': 'HomeDirObjectAccess',
-        }],
+            {
+                "Sid": "AWSTransferRequirements",
+                "Effect": "Allow",
+                "Action": [
+                    "s3:ListAllMyBuckets",
+                    "s3:GetBucketLocation",
+                ],
+                "Resource": "*",
+            },
+            {
+                "Resource": "arn:aws:s3:::*",
+                "Action": [
+                    "s3:PutObject",
+                    "s3:GetObject",
+                    "s3:DeleteObjectVersion",
+                    "s3:DeleteObject",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectACL",
+                    "s3:PutObjectACL",
+                ],
+                "Effect": "Allow",
+                "Sid": "HomeDirObjectAccess",
+            },
+        ],
     }
 
 
@@ -81,34 +90,42 @@ def construct_response(
     input_password = login.password
 
     # Lookup user's secret which can contain the password or SSH public keys
-    secret_configuration_string = get_secret(
+    secret_configuration_string = secrets_manager_handler.get_secret(
         username=input_username,
-        secrets_manager_prefix='SFTP',
-        aws_region=os.environ['SECRETS_MANAGER_REGION'],
+        secrets_manager_prefix="SFTP",
+        aws_region=os.environ["SECRETS_MANAGER_REGION"],
         logger=logger,
     )
 
     if secret_configuration_string is not None:
-        secret_configuration = json.loads(secret_configuration_string)
+        secret_config_dictionary = json.loads(secret_configuration_string)
+        secret_configuration = Secret(
+            username=input_username,
+            home_directory_details="HomeDirectoryDetails" in secret_config_dictionary,
+        ).update(
+            secret_config_dictionary,
+        )
     else:
         logger.error("Secrets Manager exception thrown")
         return {}
 
-    user_password = secret_configuration.get('password')
+    user_password = secret_configuration.password
     if user_password and (user_password != login.password):
         raise IncorrectPassword()
 
-    if not secret_configuration.get('company_id'):
-        if dealer_id := secret_configuration.get('dealer_id'):
-            secret_configuration['company_id'] = dealer_id
+    if not secret_configuration.company_id:
+        if dealer_id := secret_configuration.dealer_id:
+            secret_configuration.company_id = dealer_id
         else:
-            logger.error("Company id or dealer id "
-                         "are not presented in SFTP user "
-                         "configuration.")
+            logger.error(
+                "Company id or dealer id "
+                "are not presented in SFTP user "
+                "configuration."
+            )
             raise IncorrectUserConfiguration()
 
     response_object = AWSTransferResponse()
-    if key := secret_configuration.get('key'):
+    if key := secret_configuration.key:
         response_object.public_keys = [key]
 
     elif not user_password:
@@ -118,73 +135,59 @@ def construct_response(
     # or we're using SSH public key auth and
     # we've begun constructing the data response. Check for each key value pair.
     # These are required so set to empty string if missing
-    response['Role'] = secret_configuration.get('Role')
+    response["Role"] = secret_configuration.role
 
     # These are optional so ignore if not present
-    if 'Policy' in secret_configuration:
-        response['Policy'] = secret_configuration['Policy']
+    if secret_configuration.policy:
+        response["Policy"] = secret_configuration.policy
 
     home_directory = generate_home_directory(
         template=home_directory_template,
         secret=secret_configuration,
         user_name=input_username,
     )
-
-    if not response['Role']:
-        response['Role'] = os.getenv('DEFAULT_IAM_ROLE_ARN')
-        response['Policy'] = json.dumps(construct_policy(
+    if not s3_handler_functions.s3_path_existence_check(
+        bucket_name=bucket_name,
+        path=home_directory,
+    ):
+        s3_handler_functions.onboard_new_user_with_home_directory_folders_in_s3(
             bucket_name=bucket_name,
             home_directory=home_directory,
-        ))
+        )
 
-    if 'HomeDirectoryDetails' in secret_configuration:
-        raise ValueError('`HomeDirectoryDetails` is not supported.')
+    if not response["Role"]:
+        response["Role"] = os.getenv("DEFAULT_IAM_ROLE_ARN")
+        response["Policy"] = json.dumps(
+            construct_policy(
+                bucket_name=bucket_name,
+                home_directory=home_directory,
+            )
+        )
 
-    response['HomeDirectoryType'] = 'LOGICAL'
-    response['HomeDirectoryDetails'] = json.dumps([{
-        'Entry': '/',
-        'Target': generate_absolute_path(
-            home_directory=home_directory,
-            bucket_name=bucket_name,
-        ),
-    }])
+    if secret_configuration.home_directory_details:
+        raise ValueError("`HomeDirectoryDetails` is not supported.")
 
-    if response.get('HomeDirectory') is not None:
-        del response['HomeDirectory']
+    response["HomeDirectoryType"] = "LOGICAL"
+    response["HomeDirectoryDetails"] = json.dumps(
+        [
+            {
+                "Entry": "/",
+                "Target": generate_absolute_path(
+                    home_directory=home_directory,
+                    bucket_name=bucket_name,
+                ),
+            }
+        ]
+    )
+
+    if response.get("HomeDirectory") is not None:
+        del response["HomeDirectory"]
 
     response.update(response_object.dict(by_alias=True))
 
     logger.info(
-        'User has been successfully authenticated',
+        "User has been successfully authenticated",
         response=response,
     )
 
     return response
-
-
-def get_secret(
-    username: str,
-    secrets_manager_prefix: str,
-    aws_region: str,
-    logger: BoundLogger,
-):
-    """Retrieve user information from AWS Secrets Manager."""
-    secret_id = f'{secrets_manager_prefix}/{username}'
-    client = boto3.session.Session().client(
-        service_name='secretsmanager',
-        region_name=aws_region,
-    )
-
-    try:
-        resp = client.get_secret_value(SecretId=secret_id)
-    except client.exceptions.ResourceNotFoundException as err:
-        raise UserNotFound(username=username) from err
-
-    # Depending on whether the secret is a string or binary,
-    # one of these fields will be populated.
-    if 'SecretString' in resp:
-        logger.info("Found Secret String")
-        return resp['SecretString']
-    else:
-        logger.info("Found Binary Secret")
-        return base64.b64decode(resp['SecretBinary'])

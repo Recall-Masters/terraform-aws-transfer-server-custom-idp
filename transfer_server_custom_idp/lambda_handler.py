@@ -2,7 +2,7 @@ import os
 
 from transfer_server_custom_idp.auth import construct_response
 from transfer_server_custom_idp.log import create_logger
-from transfer_server_custom_idp.models import Login
+from transfer_server_custom_idp.models.secret_model import Login
 
 
 def lambda_handler(event, _context):
@@ -12,14 +12,14 @@ def lambda_handler(event, _context):
     Construct the response and return it. Catch errors and make sure they reach
     Sentry.
     """
-    home_directory_template = os.getenv('HOME_DIRECTORY_TEMPLATE')
-    bucket_name = os.getenv('BUCKET_NAME')
+    home_directory_template = os.getenv("HOME_DIRECTORY_TEMPLATE")
+    bucket_name = os.getenv("BUCKET_NAME")
 
     login = Login(**event)
 
     logger = create_logger(
-        sentry_dsn=os.getenv('SENTRY_DSN'),
-        environment=os.getenv('ENV'),
+        sentry_dsn=os.getenv("SENTRY_DSN"),
+        environment=os.getenv("ENV"),
     ).bind(
         username=login.username,
         server_id=login.server_id,
@@ -35,7 +35,7 @@ def lambda_handler(event, _context):
         )
     except Exception as err:
         logger.exception(
-            'Authentication failed',
+            "Authentication failed",
             error_type=err.__class__.__name__,
         )
 
