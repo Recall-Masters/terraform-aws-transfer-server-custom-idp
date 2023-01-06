@@ -18,15 +18,20 @@ def generate_home_directory(
     :param secret: User parameters from AWS Secrets Manager.
     :return: Full absolute path in the format AWS Transfer can understand.
     """
-    return Template(
-        template,
-        lstrip_blocks=True,
-        trim_blocks=True,
-        keep_trailing_newline=False,
-    ).render(
-        secret=secret,
-        user_name=user_name,
-    ).strip()
+    return (
+        Template(
+            template,
+            lstrip_blocks=True,
+            trim_blocks=True,
+            keep_trailing_newline=False,
+            undefined=StrictUndefined,
+        )
+        .render(
+            secret=secret,
+            user_name=user_name,
+        )
+        .strip()
+    )
 
 
 def generate_absolute_path(home_directory: str, bucket_name: str) -> str:
@@ -37,4 +42,4 @@ def generate_absolute_path(home_directory: str, bucket_name: str) -> str:
     :param home_directory: directory in the bucket.
     :return: path.
     """
-    return f'/{bucket_name}/{home_directory}'
+    return f"/{bucket_name}/{home_directory}"
