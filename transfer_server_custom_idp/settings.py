@@ -7,13 +7,13 @@ DMS_FOLDERS = [
 ]
 
 DEALER_FOLDERS = [
-    "Communication Plan",
-    "Complete Reports",
-    "Customer Sales Database",
-    "Customer Service Database",
-    "Mailed VINS",
-    "Sales Transactions",
-    "Service Transactions",
+    "Communication_Plan",
+    "Complete_Reports",
+    "Customer_Sales_Database",
+    "Customer_Service_Database",
+    "Mailed_VINS",
+    "Sales_Transactions",
+    "Service_Transactions",
 ]
 
 
