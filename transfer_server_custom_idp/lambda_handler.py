@@ -34,16 +34,16 @@ def lambda_handler(event, _context):
             home_directory_template=home_directory_template,
             logger=logger,
         )
-        logger.info(
-            "The response '%s' was successfully constructed for user '%s'",
-            login.username,
-            json.dumps(response),
-        )
-        return response
     except Exception as err:
         logger.exception(
             "Authentication failed",
             error_type=err.__class__.__name__,
         )
+        return {}
 
-    return {}
+    logger.info(
+        "The response '%s' was successfully constructed for user '%s'",
+        json.dumps(response),
+        login.username,
+    )
+    return response
