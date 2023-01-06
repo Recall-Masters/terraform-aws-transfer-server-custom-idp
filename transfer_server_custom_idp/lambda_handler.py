@@ -1,3 +1,4 @@
+import json
 import os
 
 from transfer_server_custom_idp.auth import construct_response
@@ -27,12 +28,18 @@ def lambda_handler(event, _context):
     )
 
     try:
-        return construct_response(
+        response = construct_response(
             login=login,
             bucket_name=bucket_name,
             home_directory_template=home_directory_template,
             logger=logger,
         )
+        logger.info(
+            "The response '%s' was successfully constructed for user '%s'",
+            login.username,
+            json.dumps(response),
+        )
+        return response
     except Exception as err:
         logger.exception(
             "Authentication failed",
