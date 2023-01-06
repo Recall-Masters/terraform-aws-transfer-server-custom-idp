@@ -29,7 +29,7 @@ COMPANY_FOLDERS = [
 ]
 
 HOME_DIRECTORY_TO_FOLDERS_MAPPING = {
-    "sftp/dms/": DMS_FOLDERS,
+    "sftp/type=dms/": DMS_FOLDERS,
     "sftp/dealer=": DEALER_FOLDERS,
     SFTP_COMPANY_PREFIX: COMPANY_FOLDERS,
 }
