@@ -100,7 +100,7 @@ def construct_response(
     if secret_configuration_string is not None:
         secret_config_dictionary = json.loads(secret_configuration_string)
         secret_configuration = Secret(
-            username=input_username,
+            user_name=input_username,
             home_directory_details="HomeDirectoryDetails" in secret_config_dictionary,
         ).update(
             secret_config_dictionary,
@@ -144,7 +144,6 @@ def construct_response(
     home_directory = generate_home_directory(
         template=home_directory_template,
         secret=secret_configuration,
-        user_name=input_username,
     )
     if not s3_handler_functions.s3_path_existence_check(
         bucket_name=bucket_name,

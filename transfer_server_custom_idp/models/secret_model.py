@@ -10,7 +10,7 @@ T = TypeVar("T")
 class Secret:
     """Secret model for SFTP user."""
 
-    username: str
+    user_name: str
     home_directory_details: bool
     password: Optional[str] = None
     dealer_id: Optional[str] = None
