@@ -1,14 +1,14 @@
 import pytest
 
 from transfer_server_custom_idp.home_directory import generate_home_directory
+from transfer_server_custom_idp.models.secret_model import Secret
 
 
 def test_user_name():
     assert (
         generate_home_directory(
-            template="test/{{ user_name }}",
-            secret={},
-            user_name="john",
+            template="test/{{ secret.user_name }}",
+            secret=Secret(user_name="john", home_directory_details=False),
         )
         == "test/john"
     )
@@ -17,11 +17,12 @@ def test_user_name():
 def test_secret():
     assert (
         generate_home_directory(
-            template="{{ secret.type }}/{{ user_name }}",
-            secret={
-                "type": "staff",
-            },
-            user_name="john",
+            template="{{ secret.type }}/{{ secret.user_name }}",
+            secret=Secret(
+                user_name="john",
+                home_directory_details=False,
+                type="staff",
+            ),
         )
         == "staff/john"
     )
@@ -31,10 +32,10 @@ def test_secret():
 def conditional_template() -> str:
     return """
         {{ secret.type }}/
-        {%- if secret.company_id is defined -%}
+        {%- if secret.company_id -%}
             {{ secret.company_id }}/
         {%- endif -%}
-        {{ user_name }}
+        {{ secret.user_name }}
     """
 
 
@@ -42,11 +43,12 @@ def test_conditional_dms(conditional_template: str):
     assert (
         generate_home_directory(
             template=conditional_template,
-            secret={
-                "type": "dms",
-                "company_id": 10005,
-            },
-            user_name="john",
+            secret=Secret(
+                user_name="john",
+                home_directory_details=False,
+                type="dms",
+                company_id="10005",
+            ),
         )
         == "dms/10005/john"
     )
@@ -56,10 +58,11 @@ def test_conditional_prospect(conditional_template):
     assert (
         generate_home_directory(
             template=conditional_template,
-            secret={
-                "type": "prospect",
-            },
-            user_name="john",
+            secret=Secret(
+                user_name="john",
+                home_directory_details=False,
+                type="prospect",
+            ),
         )
         == "prospect/john"
     )

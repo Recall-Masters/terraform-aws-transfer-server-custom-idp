@@ -1,10 +1,11 @@
 from jinja2 import Template, StrictUndefined
 
+from transfer_server_custom_idp.models.secret_model import Secret
+
 
 def generate_home_directory(
     template: str,
-    secret: dict,
-    user_name: str,
+    secret: Secret,
 ) -> str:
     """
     Generate the home path for the user.
@@ -28,7 +29,6 @@ def generate_home_directory(
         )
         .render(
             secret=secret,
-            user_name=user_name,
         )
         .strip()
     )
