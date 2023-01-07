@@ -1,3 +1,4 @@
+import dataclasses
 import json
 import os
 
@@ -108,9 +109,11 @@ def construct_response(
     else:
         logger.error("Secrets Manager exception thrown")
         return {}
-
+    logger.info(f"User password: {secret_configuration.password}")
+    logger.info(f"User config from secret: {dataclasses.asdict(secret_configuration)}")
+    logger.info(f"Input password: {input_password}")
     user_password = secret_configuration.password
-    if user_password and (user_password != login.password):
+    if user_password and (user_password != input_password):
         raise IncorrectPassword()
 
     if not secret_configuration.company_id:
