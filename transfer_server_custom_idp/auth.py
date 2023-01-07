@@ -148,6 +148,7 @@ def construct_response(
         template=home_directory_template,
         secret=secret_configuration,
     )
+    logger.info("Before onboard")
     if not s3_handler_functions.s3_path_existence_check(
         bucket_name=bucket_name,
         path=home_directory,
@@ -156,6 +157,7 @@ def construct_response(
             bucket_name=bucket_name,
             home_directory=home_directory,
         )
+    logger.info("After onboard")
 
     if not response["Role"]:
         response["Role"] = os.getenv("DEFAULT_IAM_ROLE_ARN")
