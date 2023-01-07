@@ -1,3 +1,5 @@
+import logging
+
 import boto3
 
 from transfer_server_custom_idp.settings import (
@@ -5,19 +7,25 @@ from transfer_server_custom_idp.settings import (
     SFTP_COMPANY_PREFIX,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def s3_path_existence_check(
     bucket_name: str,
     path: str,
 ) -> bool:
     """Checks the existence of path in AWS S3 bucket."""
-
-    s3_client = boto3.client("s3")
-    path_content = s3_client.list_objects(
-        Bucket=bucket_name,
-        Prefix=path,
-        MaxKeys=1,
-    )["Content"]
+    try:
+        logger.info("Path to check: %s", path)
+        s3_client = boto3.client("s3")
+        path_content = s3_client.list_objects(
+            Bucket=bucket_name,
+            Prefix=path,
+            MaxKeys=1,
+        )["Content"]
+    except Exception as error:
+        logger.exception("Exception occurred: %s", error)
+        raise Exception
     if len(path_content) > 0:
         return True
     return False
@@ -28,12 +36,17 @@ def create_folder_in_s3(
     folder_path: str,
 ) -> None:
     """Creates path in AWS S3 bucket without object upload."""
-    s3_client = boto3.client("s3")
-    s3_client.put_object(
-        Bucket=bucket_name,
-        Body="",
-        Key=folder_path,
-    )
+    try:
+        logger.info("Folder path to create: %s", folder_path)
+        s3_client = boto3.client("s3")
+        s3_client.put_object(
+            Bucket=bucket_name,
+            Body="",
+            Key=folder_path,
+        )
+    except Exception as error:
+        logger.exception("Exception occurred: %s", error)
+        raise Exception
 
 
 def onboard_new_user_with_home_directory_folders_in_s3(
