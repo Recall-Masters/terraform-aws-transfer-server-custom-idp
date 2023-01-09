@@ -1,11 +1,9 @@
 import logging
-import os
 
-import boto3
 from botocore.client import BaseClient
 
 from transfer_server_custom_idp.settings import (
-    AWS_REGION, HOME_DIRECTORY_TO_FOLDERS_MAPPING,
+    HOME_DIRECTORY_TO_FOLDERS_MAPPING,
     SFTP_COMPANY_PREFIX,
 )
 
@@ -15,13 +13,10 @@ logger = logging.getLogger(__name__)
 def s3_path_existence_check(
     bucket_name: str,
     path: str,
+    s3_client: BaseClient,
 ) -> bool:
     """Checks the existence of path in AWS S3 bucket."""
     logger.info("Start client")
-    s3_client = boto3.session.Session().client(
-        service_name="s3",
-        region_name=AWS_REGION,
-    )
     logger.info("End client")
     if s3_client.list_objects(
         Bucket=bucket_name,
@@ -54,13 +49,10 @@ def create_folder_in_s3(
 def onboard_new_user_with_home_directory_folders_in_s3(
     home_directory: str,
     bucket_name: str,
+    s3_client: BaseClient,
 ) -> None:
     """Creates the home directory folders based on home directory prefix."""
     logger.info("Onboard the: %s", home_directory)
-    s3_client = boto3.session.Session().client(
-        service_name="s3",
-        region_name=AWS_REGION,
-    )
     for mapping_key in HOME_DIRECTORY_TO_FOLDERS_MAPPING.keys():
         if mapping_key in home_directory and mapping_key != SFTP_COMPANY_PREFIX:
             for folder in HOME_DIRECTORY_TO_FOLDERS_MAPPING[mapping_key]:

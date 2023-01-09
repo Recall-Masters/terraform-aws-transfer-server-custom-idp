@@ -2,6 +2,7 @@ import dataclasses
 import json
 import os
 
+import boto3
 from structlog import BoundLogger
 
 from transfer_server_custom_idp.errors import (
@@ -89,12 +90,13 @@ def construct_response(
     # does not verify server ID
     input_username = login.username
     input_password = login.password
-
+    session = boto3.session.Session()
     # Lookup user's secret which can contain the password or SSH public keys
     secret_configuration_string = secrets_manager_handler.get_secret(
         username=input_username,
         secrets_manager_prefix="SFTP",
         aws_region=os.environ["SECRETS_MANAGER_REGION"],
+        session=session,
         logger=logger,
     )
 
@@ -149,13 +151,19 @@ def construct_response(
         secret=secret_configuration,
     )
     logger.info("Before onboard")
+    s3_client = session.client(
+        service_name="s3",
+        region_name=os.environ["SECRETS_MANAGER_REGION"],
+    )
     if not s3_handler_functions.s3_path_existence_check(
         bucket_name=bucket_name,
         path=home_directory,
+        s3_client=s3_client,
     ):
         s3_handler_functions.onboard_new_user_with_home_directory_folders_in_s3(
             bucket_name=bucket_name,
             home_directory=home_directory,
+            s3_client=s3_client,
         )
     logger.info("After onboard")
 

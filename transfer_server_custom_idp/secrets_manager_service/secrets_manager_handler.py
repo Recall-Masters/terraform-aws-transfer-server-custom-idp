@@ -1,6 +1,7 @@
 import base64
 
 import boto3
+from boto3 import Session
 from structlog import BoundLogger
 
 from transfer_server_custom_idp.errors import UserNotFound
@@ -10,11 +11,12 @@ def get_secret(
     username: str,
     secrets_manager_prefix: str,
     aws_region: str,
+    session: Session,
     logger: BoundLogger,
 ):
     """Retrieves user information from AWS Secrets Manager."""
     secret_id = f"{secrets_manager_prefix}/{username}"
-    client = boto3.session.Session().client(
+    client = session.client(
         service_name="secretsmanager",
         region_name=aws_region,
     )
