@@ -16,11 +16,13 @@ def s3_path_existence_check(
     s3_client: BaseClient,
 ) -> bool:
     """Checks the existence of path in AWS S3 bucket."""
+    logger.info('File path to find: %s', path)
     if s3_client.list_objects(
         Bucket=bucket_name,
         Prefix=path,
         MaxKeys=1,
     ).get('Contents'):
+        logger.info("Path is here!")
         return True
     logger.info("Path is not here")
     return False
