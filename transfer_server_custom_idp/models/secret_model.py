@@ -1,9 +1,7 @@
-from dataclasses import dataclass, fields
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
-
-T = TypeVar("T")
 
 
 @dataclass

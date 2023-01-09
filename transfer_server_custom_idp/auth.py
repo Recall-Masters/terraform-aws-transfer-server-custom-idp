@@ -111,9 +111,6 @@ def construct_response(
     else:
         logger.error("Secrets Manager exception thrown")
         return {}
-    logger.info(f"User password: {secret_configuration.password}")
-    logger.info(f"User config from secret: {dataclasses.asdict(secret_configuration)}")
-    logger.info(f"Input password: {input_password}")
     user_password = secret_configuration.password
     if user_password and (user_password != input_password):
         raise IncorrectPassword()
@@ -150,7 +147,6 @@ def construct_response(
         template=home_directory_template,
         secret=secret_configuration,
     )
-    logger.info("Before onboard")
     s3_client = session.client(
         service_name="s3",
         region_name=os.environ["SECRETS_MANAGER_REGION"],
@@ -165,8 +161,6 @@ def construct_response(
             home_directory=home_directory,
             s3_client=s3_client,
         )
-    logger.info("After onboard")
-
     if not response["Role"]:
         response["Role"] = os.getenv("DEFAULT_IAM_ROLE_ARN")
         response["Policy"] = json.dumps(

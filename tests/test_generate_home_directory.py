@@ -72,8 +72,9 @@ def test_secret_missing():
     with pytest.raises(Exception):
         generate_home_directory(
             template="{{ secret.category }}/{{ user_name }}",
-            secret={
-                "type": "staff",
-            },
-            user_name="john",
+            secret=Secret(
+                user_name="john",
+                home_directory_details=False,
+                type="prospect",
+            ),
         )

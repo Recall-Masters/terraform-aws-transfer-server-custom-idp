@@ -33,4 +33,4 @@ HOME_DIRECTORY_TO_FOLDERS_MAPPING = {
     "sftp/dealer=": DEALER_FOLDERS,
 }
 
-AWS_REGION = 'us-west-2'
+AWS_REGION = "us-west-2"
