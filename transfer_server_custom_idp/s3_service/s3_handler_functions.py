@@ -16,7 +16,10 @@ def s3_path_existence_check(
     path: str,
 ) -> bool:
     """Checks the existence of path in AWS S3 bucket."""
+    logger.info("Start client")
+    logger.info("Client %s", boto3.client('s3', region_name=AWS_REGION))
     s3_client = boto3.client('s3', region_name=AWS_REGION)
+    logger.info("End client")
     if s3_client.list_objects(
         Bucket=bucket_name,
         Prefix=path,
