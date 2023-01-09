@@ -16,14 +16,14 @@ def s3_path_existence_check(
     path: str,
 ) -> bool:
     """Checks the existence of path in AWS S3 bucket."""
-    logger.info("Path to check: %s", path)
-    s3_client = boto3.client("s3", region_name=AWS_REGION)
+    s3_client = boto3.client('s3', region_name=AWS_REGION)
     if s3_client.list_objects(
         Bucket=bucket_name,
         Prefix=path,
         MaxKeys=1,
     ).get('Contents'):
         return True
+    logger.info("Path is not here")
     return False
 
 
@@ -50,15 +50,18 @@ def onboard_new_user_with_home_directory_folders_in_s3(
     bucket_name: str,
 ) -> None:
     """Creates the home directory folders based on home directory prefix."""
+    logger.info("Onboard the: %s", home_directory)
     for mapping_key in HOME_DIRECTORY_TO_FOLDERS_MAPPING.keys():
         if mapping_key in home_directory and mapping_key != SFTP_COMPANY_PREFIX:
             for folder in HOME_DIRECTORY_TO_FOLDERS_MAPPING[mapping_key]:
+                logger.info("Create the: %s", f"{home_directory}/{folder}/")
                 create_folder_in_s3(
                     bucket_name=bucket_name,
                     folder_path=f"{home_directory}/{folder}/",
                 )
         if SFTP_COMPANY_PREFIX in home_directory:
             for folder in HOME_DIRECTORY_TO_FOLDERS_MAPPING[SFTP_COMPANY_PREFIX]:
+                logger.info("Create the: %s", f"{home_directory}/{folder}/")
                 create_folder_in_s3(
                     bucket_name=bucket_name,
                     folder_path=f"{home_directory.rsplit('/', 1)[0]}/{folder}/",
