@@ -16,8 +16,6 @@ def s3_path_existence_check(
     s3_client: BaseClient,
 ) -> bool:
     """Checks the existence of path in AWS S3 bucket."""
-    logger.info("Start client")
-    logger.info("End client")
     if s3_client.list_objects(
         Bucket=bucket_name,
         Prefix=path,
@@ -56,7 +54,6 @@ def onboard_new_user_with_home_directory_folders_in_s3(
     for mapping_key in HOME_DIRECTORY_TO_FOLDERS_MAPPING.keys():
         if mapping_key in home_directory and mapping_key != SFTP_COMPANY_PREFIX:
             for folder in HOME_DIRECTORY_TO_FOLDERS_MAPPING[mapping_key]:
-                logger.info("Create the: %s", f"{home_directory}/{folder}/")
                 create_folder_in_s3(
                     bucket_name=bucket_name,
                     folder_path=f"{home_directory}/{folder}/",
@@ -64,9 +61,9 @@ def onboard_new_user_with_home_directory_folders_in_s3(
                 )
         if SFTP_COMPANY_PREFIX in home_directory:
             for folder in HOME_DIRECTORY_TO_FOLDERS_MAPPING[SFTP_COMPANY_PREFIX]:
-                logger.info("Create the: %s", f"{home_directory}/{folder}/")
                 create_folder_in_s3(
                     bucket_name=bucket_name,
                     folder_path=f"{home_directory.rsplit('/', 1)[0]}/{folder}/",
                     s3_client=s3_client,
                 )
+    logger.info("End of onboard the: %s", home_directory)
