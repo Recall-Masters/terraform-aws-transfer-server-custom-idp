@@ -26,7 +26,7 @@ resource "aws_lambda_function" "sftp" {
     mode = "PassThrough"
   }
 
-  timeouts {}
+  timeout = 10
 
   environment {
     variables = {
