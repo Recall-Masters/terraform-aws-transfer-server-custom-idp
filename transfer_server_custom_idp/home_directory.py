@@ -15,7 +15,6 @@ def generate_home_directory(
     as a Lambda function environment variable).
 
     :param template: Jinja2 template to render the path;
-    :param user_name: Name of the SFTP user;
     :param secret: User parameters from AWS Secrets Manager.
     :return: Full absolute path in the format AWS Transfer can understand.
     """
@@ -31,7 +30,7 @@ def generate_home_directory(
             secret=secret,
         )
         .strip()
-    )
+    )[:-1]
 
 
 def generate_absolute_path(home_directory: str, bucket_name: str) -> str:

@@ -7,7 +7,7 @@ from transfer_server_custom_idp.models.secret_model import Secret
 def test_user_name():
     assert (
         generate_home_directory(
-            template="test/{{ secret.user_name }}",
+            template="test/{{ secret.user_name }}/",
             secret=Secret(user_name="john", home_directory_details=False),
         )
         == "test/john"
@@ -17,7 +17,7 @@ def test_user_name():
 def test_secret():
     assert (
         generate_home_directory(
-            template="{{ secret.type }}/{{ secret.user_name }}",
+            template="{{ secret.type }}/{{ secret.user_name }}/",
             secret=Secret(
                 user_name="john",
                 home_directory_details=False,
@@ -35,7 +35,7 @@ def conditional_template() -> str:
         {%- if secret.company_id -%}
             {{ secret.company_id }}/
         {%- endif -%}
-        {{ secret.user_name }}
+        {{ secret.user_name }}/
     """
 
 
@@ -71,7 +71,7 @@ def test_conditional_prospect(conditional_template):
 def test_secret_missing():
     with pytest.raises(Exception):
         generate_home_directory(
-            template="{{ secret.category }}/{{ user_name }}",
+            template="{{ secret.category }}/{{ user_name }}/",
             secret=Secret(
                 user_name="john",
                 home_directory_details=False,

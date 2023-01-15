@@ -1,11 +1,13 @@
 import logging
+import re
 
 from botocore.client import BaseClient
 
 from transfer_server_custom_idp.settings import (
     COMPANY_FOLDERS,
     HOME_DIRECTORY_TO_FOLDERS_MAPPING,
-    SFTP_COMPANY_PREFIX,
+    SFTP_COMPANY_PREFIX_REGEX,
+    SFTP_COMPANY_TYPE_SUFFIX_REGEX,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,14 +54,20 @@ def onboard_new_user_with_home_directory_folders_in_s3(
 ) -> None:
     """Creates the home directory folders based on home directory prefix."""
     for mapping_key in HOME_DIRECTORY_TO_FOLDERS_MAPPING.keys():
-        if mapping_key in home_directory:
+        if re.match(
+            rf"{mapping_key}",
+            home_directory,
+        ):
             for folder in HOME_DIRECTORY_TO_FOLDERS_MAPPING[mapping_key]:
                 create_folder_in_s3(
                     bucket_name=bucket_name,
                     folder_path=f"{home_directory}/{folder}/",
                     s3_client=s3_client,
                 )
-        if SFTP_COMPANY_PREFIX in home_directory:
+        if re.match(rf"{SFTP_COMPANY_PREFIX_REGEX}", home_directory) and re.match(
+            rf"{SFTP_COMPANY_TYPE_SUFFIX_REGEX}",
+            home_directory,
+        ):
             for folder in COMPANY_FOLDERS:
                 create_folder_in_s3(
                     bucket_name=bucket_name,
