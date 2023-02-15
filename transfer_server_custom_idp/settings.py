@@ -1,4 +1,3 @@
-INCOMING_FOLDER = "incoming"
 SFTP_COMPANY_PREFIX_REGEX = "^.*(sftp/dealer=|sftp/company=).*$"
 SFTP_COMPANY_TYPE_SUFFIX_REGEX = "^.*(/type=vin/|/type=inventory/).*$"
 DMS_FOLDERS = [
@@ -18,6 +17,7 @@ DEALER_FOLDERS = [
 
 
 COMPANY_FOLDERS = [
+    "incoming",
     "processing",
     "outgoing",
     "error",
