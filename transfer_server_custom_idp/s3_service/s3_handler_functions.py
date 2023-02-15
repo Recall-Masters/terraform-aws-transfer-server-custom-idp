@@ -61,7 +61,7 @@ def onboard_new_user_with_home_directory_folders_in_s3(
             for folder in HOME_DIRECTORY_TO_FOLDERS_MAPPING[mapping_key]:
                 create_folder_in_s3(
                     bucket_name=bucket_name,
-                    folder_path=f"{home_directory}/{folder}/",
+                    folder_path=f'{home_directory}/{folder}/',
                     s3_client=s3_client,
                 )
         if re.match(rf"{SFTP_COMPANY_PREFIX_REGEX}", home_directory) and re.match(
@@ -71,7 +71,7 @@ def onboard_new_user_with_home_directory_folders_in_s3(
             for folder in COMPANY_FOLDERS:
                 create_folder_in_s3(
                     bucket_name=bucket_name,
-                    folder_path=f'{home_directory.rsplit("/", 1)[0]}/{folder}/',
+                    folder_path=f'{home_directory}/{folder}/',
                     s3_client=s3_client,
                 )
     logger.info("End of on-boarding the: %s", home_directory)
