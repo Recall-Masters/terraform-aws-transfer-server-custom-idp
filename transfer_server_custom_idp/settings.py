@@ -1,5 +1,5 @@
 SFTP_COMPANY_PREFIX_REGEX = "^.*(sftp/dealer=|sftp/company=).*$"
-SFTP_COMPANY_TYPE_SUFFIX_REGEX = "^.*(/type=vin/|/type=inventory/).*$"
+SFTP_COMPANY_TYPE_SUFFIX_REGEX = "^.*(/type=check|/type=inventory).*$"
 DMS_FOLDERS = [
     "processed",
     "error",
