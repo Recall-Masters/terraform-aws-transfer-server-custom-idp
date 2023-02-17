@@ -15,14 +15,16 @@ DEALER_FOLDERS = [
     "Service_Transactions",
 ]
 
+INCOMING_FOLDERS = [
+    'incoming',
+    'incoming_repaired/incoming',
+]
 
 COMPANY_FOLDERS = [
-    "incoming",
     "processing",
     "outgoing",
     "error",
     "incoming_repaired",
-    "incoming_repaired/incoming",
     "incoming_repaired/error",
     "incoming_repaired/processing",
     "incoming_repaired/outgoing",

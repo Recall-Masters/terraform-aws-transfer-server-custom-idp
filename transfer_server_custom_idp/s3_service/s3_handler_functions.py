@@ -6,7 +6,7 @@ from botocore.client import BaseClient
 from transfer_server_custom_idp.settings import (
     COMPANY_FOLDERS,
     HOME_DIRECTORY_TO_FOLDERS_MAPPING,
-    SFTP_COMPANY_PREFIX_REGEX,
+    INCOMING_FOLDERS, SFTP_COMPANY_PREFIX_REGEX,
     SFTP_COMPANY_TYPE_SUFFIX_REGEX,
 )
 
@@ -33,13 +33,17 @@ def create_folder_in_s3(
     bucket_name: str,
     folder_path: str,
     s3_client: BaseClient,
+    with_default_file_name: str = "",
 ) -> None:
     """Creates path in AWS S3 bucket without object upload."""
     try:
         s3_client.put_object(
             Bucket=bucket_name,
-            Body="",
-            Key=folder_path,
+            Body="" if not with_default_file_name else b"",
+            Key=(
+                folder_path if not with_default_file_name
+                else f'{folder_path}/{with_default_file_name}'
+            ),
         )
         logger.info("Folder path %s is created.", folder_path)
     except Exception as error:
@@ -74,4 +78,12 @@ def onboard_new_user_with_home_directory_folders_in_s3(
                     folder_path=f'{home_directory}/{folder}/',
                     s3_client=s3_client,
                 )
+            for folder in INCOMING_FOLDERS:
+                create_folder_in_s3(
+                    bucket_name=bucket_name,
+                    folder_path=f'{home_directory}/{folder}/',
+                    s3_client=s3_client,
+                    with_default_file_name="do_not_delete.txt",
+                )
+
     logger.info("End of on-boarding the: %s", home_directory)
