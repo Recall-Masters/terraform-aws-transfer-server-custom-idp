@@ -81,7 +81,7 @@ def onboard_new_user_with_home_directory_folders_in_s3(
             for folder in INCOMING_FOLDERS:
                 create_folder_in_s3(
                     bucket_name=bucket_name,
-                    folder_path=f'{home_directory}/{folder}/',
+                    folder_path=f'{home_directory}/{folder}',
                     s3_client=s3_client,
                     with_default_file_name="do_not_delete.txt",
                 )
