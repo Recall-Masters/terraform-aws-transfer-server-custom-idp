@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 import boto3
 from structlog import BoundLogger
@@ -20,6 +21,9 @@ from transfer_server_custom_idp.models.secret_model import (
 )
 from transfer_server_custom_idp.s3_service import s3_handler_functions
 from transfer_server_custom_idp.secrets_manager_service import secrets_manager_handler
+from transfer_server_custom_idp.settings import INCOMING_FOLDERS, \
+    SFTP_COMPANY_PREFIX_REGEX, \
+    SFTP_COMPANY_TYPE_SUFFIX_REGEX
 
 
 def construct_policy(
@@ -160,6 +164,23 @@ def construct_response(
             home_directory=home_directory,
             s3_client=s3_client,
         )
+    if re.match(rf"{SFTP_COMPANY_PREFIX_REGEX}", home_directory) and re.match(
+        rf"{SFTP_COMPANY_TYPE_SUFFIX_REGEX}",
+        home_directory,
+    ):
+        for folder in INCOMING_FOLDERS:
+            if not s3_handler_functions.s3_path_existence_check(
+                bucket_name=bucket_name,
+                path=f'{home_directory}/{folder}',
+                s3_client=s3_client,
+            ):
+                s3_handler_functions.onboard_new_user_with_home_directory_folders_in_s3(
+                    bucket_name=bucket_name,
+                    home_directory=f'{home_directory}/{folder}',
+                    s3_client=s3_client,
+                    recreate_company_folder=True,
+                )
+
     if not response["Role"]:
         response["Role"] = os.getenv("DEFAULT_IAM_ROLE_ARN")
         response["Policy"] = json.dumps(
