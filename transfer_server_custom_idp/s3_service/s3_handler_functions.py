@@ -22,8 +22,9 @@ def s3_path_existence_check(
     if s3_client.list_objects(
         Bucket=bucket_name,
         Prefix=path,
-        MaxKeys=1,
+        MaxKeys=2,
     ).get("Contents"):
+        logger.info('Path : "%s" exists.', path)
         return True
     logger.info("On-boarding of new user with home directory: %s", path)
     return False
