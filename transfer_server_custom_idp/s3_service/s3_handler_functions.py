@@ -22,7 +22,7 @@ def s3_path_existence_check(
     if s3_client.list_objects(
         Bucket=bucket_name,
         Prefix=path,
-        MaxKeys=2,
+        MaxKeys=1,
     ).get("Contents"):
         logger.info('Path : "%s" exists.', path)
         return True
@@ -46,7 +46,6 @@ def create_folder_in_s3(
                 else f'{folder_path}/{with_default_file_name}'
             ),
         )
-        logger.info("Folder path %s is created.", folder_path)
     except Exception as error:
         logger.info("Exception occurred: %s", error)
         raise Exception

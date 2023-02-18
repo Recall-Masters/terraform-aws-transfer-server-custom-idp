@@ -171,7 +171,7 @@ def construct_response(
         for folder in INCOMING_FOLDERS:
             if not s3_handler_functions.s3_path_existence_check(
                 bucket_name=bucket_name,
-                path=f'{home_directory}/{folder}',
+                path=f'{home_directory}/{folder}/',
                 s3_client=s3_client,
             ):
                 s3_handler_functions.onboard_new_user_with_home_directory_folders_in_s3(
