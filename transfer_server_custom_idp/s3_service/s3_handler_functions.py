@@ -65,6 +65,7 @@ def onboard_new_user_with_home_directory_folders_in_s3(
             s3_client=s3_client,
             with_default_file_name="do_not_delete.txt",
         )
+        return None
     for mapping_key in HOME_DIRECTORY_TO_FOLDERS_MAPPING.keys():
         if re.match(
             rf"{mapping_key}",
