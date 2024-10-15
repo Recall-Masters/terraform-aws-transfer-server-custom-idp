@@ -4,11 +4,8 @@ import re
 from botocore.client import BaseClient
 
 from transfer_server_custom_idp.settings import (
-    COMPANY_FOLDERS,
-    HOME_DIRECTORY_TO_FOLDERS_MAPPING,
-    INCOMING_FOLDERS, SFTP_COMPANY_PREFIX_REGEX,
-    SFTP_COMPANY_TYPE_SUFFIX_REGEX,
-)
+    COMPANY_FOLDERS, HOME_DIRECTORY_TO_FOLDERS_MAPPING, INCOMING_FOLDERS,
+    SFTP_COMPANY_PREFIX_REGEX, SFTP_COMPANY_TYPE_SUFFIX_REGEX)
 
 logger = logging.getLogger(__name__)
 

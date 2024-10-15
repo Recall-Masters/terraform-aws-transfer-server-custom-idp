@@ -1,4 +1,4 @@
-from jinja2 import Template, StrictUndefined
+from jinja2 import StrictUndefined, Template
 
 from transfer_server_custom_idp.models.secret_model import Secret
 

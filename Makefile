@@ -32,8 +32,9 @@ build:
 .SHELLFLAGS = -ce
 .PHONY: lint
 lint:
-	mypy --ignore-missing-imports ${DIR}
-	flakehell lint ${DIR}
+	./.venv/bin/add-trailing-comma $(shell find transfer_server_custom_idp tests -name "*.py") --exit-zero-even-if-changed --py36-plus
+	./.venv/bin/isort transfer_server_custom_idp tests
+	echo "Lint was successfully done!"
 
 
 .ONESHELL:

@@ -1,9 +1,10 @@
 # Local .terraform directories
 **/.terraform/*
-
+__pycache__/
 # .tfstate files
 *.tfstate
 *.tfstate.*
+venv
 
 # Crash log files
 crash.log
@@ -33,3 +34,5 @@ override.tf.json
 
 # Build directory
 /build/
+# OS
+.DS_Store

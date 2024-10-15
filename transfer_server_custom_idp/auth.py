@@ -3,27 +3,22 @@ import os
 import re
 
 import boto3
-from structlog import BoundLogger
+from passlib.hash import pbkdf2_sha256
+from structlog.stdlib import BoundLogger
 
-from transfer_server_custom_idp.errors import (
-    IncorrectUserConfiguration,
-    IncorrectPassword,
-    MissingCredentials,
-)
-from transfer_server_custom_idp.home_directory import (
-    generate_home_directory,
-    generate_absolute_path,
-)
+from transfer_server_custom_idp.errors import (IncorrectPassword,
+                                               IncorrectUserConfiguration,
+                                               MissingCredentials)
+from transfer_server_custom_idp.home_directory import (generate_absolute_path,
+                                                       generate_home_directory)
 from transfer_server_custom_idp.models.secret_model import (
-    AWSTransferResponse,
-    Login,
-    Secret,
-)
+    AWSTransferResponse, Login, Secret)
 from transfer_server_custom_idp.s3_service import s3_handler_functions
-from transfer_server_custom_idp.secrets_manager_service import secrets_manager_handler
-from transfer_server_custom_idp.settings import INCOMING_FOLDERS, \
-    SFTP_COMPANY_PREFIX_REGEX, \
-    SFTP_COMPANY_TYPE_SUFFIX_REGEX
+from transfer_server_custom_idp.secrets_manager_service import \
+    secrets_manager_handler
+from transfer_server_custom_idp.settings import (
+    INCOMING_FOLDERS, SFTP_COMPANY_PREFIX_REGEX,
+    SFTP_COMPANY_TYPE_SUFFIX_REGEX)
 
 
 def construct_policy(
@@ -114,9 +109,28 @@ def construct_response(
     else:
         logger.error("Secrets Manager exception thrown")
         return {}
+    ssh_key = secret_configuration.key
     user_password = secret_configuration.password
-    if user_password and (user_password != input_password):
-        raise IncorrectPassword()
+    if user_password and (user_password != input_password) and not ssh_key:
+        logger.info(
+            'Password one to one check was failed for user %s.'
+            ' Trying to check ssh key.',
+            input_username,
+        )
+        if user_hash_value := secret_configuration.hash_value:
+            is_decrypted_password_valid = pbkdf2_sha256.verify(
+                login.password,
+                user_hash_value,
+            )
+            if not is_decrypted_password_valid:
+                raise IncorrectPassword()
+            logger.info(
+                'User %s was authorized using ssh connection.',
+                input_username,
+            )
+        else:
+            raise IncorrectPassword()
+
 
     if not secret_configuration.company_id:
         if dealer_id := secret_configuration.dealer_id:
@@ -125,13 +139,13 @@ def construct_response(
             logger.error(
                 "Company id or dealer id "
                 "are not presented in SFTP user "
-                "configuration."
+                "configuration.",
             )
             raise IncorrectUserConfiguration()
 
     response_object = AWSTransferResponse()
-    if key := secret_configuration.key:
-        response_object.public_keys = [key]
+    if ssh_key:
+        response_object.public_keys = [ssh_key]
 
     elif not user_password:
         raise MissingCredentials()
@@ -187,7 +201,7 @@ def construct_response(
             construct_policy(
                 bucket_name=bucket_name,
                 home_directory=home_directory,
-            )
+            ),
         )
 
     if secret_configuration.home_directory_details:
@@ -202,8 +216,8 @@ def construct_response(
                     home_directory=home_directory,
                     bucket_name=bucket_name,
                 ),
-            }
-        ]
+            },
+        ],
     )
 
     if response.get("HomeDirectory") is not None:

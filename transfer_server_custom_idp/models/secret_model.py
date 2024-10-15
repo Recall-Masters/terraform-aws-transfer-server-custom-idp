@@ -11,6 +11,7 @@ class Secret:
     user_name: str
     home_directory_details: bool
     password: Optional[str] = None
+    hash_value: Optional[str] = None
     dealer_id: Optional[str] = None
     type: Optional[str] = None
     company_id: Optional[str] = None
