@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from documented import DocumentedError
+from documented.error import DocumentedError
 
 
 @dataclass
