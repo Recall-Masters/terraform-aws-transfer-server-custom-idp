@@ -149,17 +149,6 @@ files = [
 ]
 
 [[package]]
-name = "documented"
-version = "0.1.4"
-description = "Templated docstrings for Python classes."
-optional = false
-python-versions = ">=3.8.1,<4.0"
-files = [
-    {file = "documented-0.1.4-py3-none-any.whl", hash = "sha256:de3fd47c1f11f01c3237a8857d6dc730809c32b252d5b53e16bccdf6b6bb0894"},
-    {file = "documented-0.1.4.tar.gz", hash = "sha256:f02ff67419b5d2403e6fad6c992fb5d3392673a2825ebb7d93a97f825102d4f2"},
-]
-
-[[package]]
 name = "docutils"
 version = "0.17.1"
 description = "Docutils -- Python Documentation Utilities"
@@ -1215,4 +1204,4 @@ typing_extensions = ">=4.0,<5.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.1"
-content-hash = "322f6f99cbd36df7da473c9db87c3e75f5565c4ea13abb109e8fd331f0c0f10a"
+content-hash = "f6d2f06abe387754be2a5eeb8073f2171be2544b17e2430f8c6cb3ad6e25f930"
