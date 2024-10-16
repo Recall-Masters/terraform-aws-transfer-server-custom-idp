@@ -111,10 +111,10 @@ def construct_response(
         return {}
     ssh_key = secret_configuration.key
     user_password = secret_configuration.password
-    if user_password and (user_password != input_password) and not ssh_key:
+    if user_password and (user_password != input_password):
         logger.info(
             'Password one to one check was failed for user %s.'
-            ' Trying to check ssh key.',
+            ' Trying to check against pbkdf2 hash.',
             input_username,
         )
         if user_hash_value := secret_configuration.hash_value:
@@ -125,7 +125,7 @@ def construct_response(
             if not is_decrypted_password_valid:
                 raise IncorrectPassword()
             logger.info(
-                'User %s was authorized using ssh connection.',
+                'User %s was authorized decrypted password against pbkdf2 hash.',
                 input_username,
             )
         else:
@@ -145,6 +145,10 @@ def construct_response(
 
     response_object = AWSTransferResponse()
     if ssh_key:
+        logger.info(
+            'SSH key was found to authorize for user %s.',
+            input_username,
+        )
         response_object.public_keys = [ssh_key]
 
     elif not user_password:
