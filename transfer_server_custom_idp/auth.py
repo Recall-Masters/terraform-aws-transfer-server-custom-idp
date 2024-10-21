@@ -18,7 +18,7 @@ from transfer_server_custom_idp.secrets_manager_service import \
     secrets_manager_handler
 from transfer_server_custom_idp.settings import (
     INCOMING_FOLDERS, SFTP_COMPANY_PREFIX_REGEX,
-    SFTP_COMPANY_TYPE_SUFFIX_REGEX)
+    SFTP_COMPANY_TYPE_SUFFIX_REGEX, USERNAME_HOME_DIRECTORY_PATTERN)
 
 
 def construct_policy(
@@ -168,6 +168,17 @@ def construct_response(
         template=home_directory_template,
         secret=secret_configuration,
     )
+    if secret_configuration.shared:
+        home_directory = re.sub(
+            USERNAME_HOME_DIRECTORY_PATTERN,
+            '',
+            home_directory,
+        )
+        logger.info(
+            'Shared home directory: %s will be created for user: %s',
+            home_directory,
+            input_username,
+        )
     s3_client = session.client(
         service_name="s3",
         region_name=os.environ["SECRETS_MANAGER_REGION"],

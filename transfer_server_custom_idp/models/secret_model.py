@@ -18,6 +18,7 @@ class Secret:
     policy: Optional[Any] = None
     role: Optional[Any] = None
     key: Optional[Any] = None
+    shared: Optional[bool] = None
 
     def update(self, secret_dict: Dict[str, Any]):
         """Sets additional class attributes based on secret configuration dict."""
