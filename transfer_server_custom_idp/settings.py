@@ -37,4 +37,4 @@ HOME_DIRECTORY_TO_FOLDERS_MAPPING = {
 
 AWS_REGION = "us-west-2"
 
-USERNAME_HOME_DIRECTORY_PATTERN = r"username=[\w]+/"
+USERNAME_HOME_DIRECTORY_PATTERN = r"/username=[a-zA-Z0-9!@#$&()\\-_.+,\"]+/"
