@@ -22,8 +22,8 @@ from transfer_server_custom_idp.settings import (
 
 
 def construct_policy(
-    bucket_name: str,
-    home_directory: str,
+        bucket_name: str,
+        home_directory: str,
 ):
     """
     Create the user-specific IAM policy.
@@ -77,10 +77,10 @@ def construct_policy(
 
 
 def construct_response(
-    login: Login,
-    home_directory_template: str,
-    logger: BoundLogger,
-    bucket_name: str,
+        login: Login,
+        home_directory_template: str,
+        logger: BoundLogger,
+        bucket_name: str,
 ):
     response = {}
 
@@ -131,8 +131,10 @@ def construct_response(
         else:
             raise IncorrectPassword()
 
-
-    if not secret_configuration.company_id:
+    if (
+        not secret_configuration.company_id and
+        secret_configuration.type != 'static'
+    ):
         if dealer_id := secret_configuration.dealer_id:
             secret_configuration.company_id = dealer_id
         else:
@@ -184,9 +186,9 @@ def construct_response(
         region_name=os.environ["SECRETS_MANAGER_REGION"],
     )
     if not s3_handler_functions.s3_path_existence_check(
-        bucket_name=bucket_name,
-        path=home_directory,
-        s3_client=s3_client,
+            bucket_name=bucket_name,
+            path=home_directory,
+            s3_client=s3_client,
     ):
         s3_handler_functions.onboard_new_user_with_home_directory_folders_in_s3(
             bucket_name=bucket_name,
@@ -194,14 +196,14 @@ def construct_response(
             s3_client=s3_client,
         )
     if re.match(rf"{SFTP_COMPANY_PREFIX_REGEX}", home_directory) and re.match(
-        rf"{SFTP_COMPANY_TYPE_SUFFIX_REGEX}",
-        home_directory,
+            rf"{SFTP_COMPANY_TYPE_SUFFIX_REGEX}",
+            home_directory,
     ):
         for folder in INCOMING_FOLDERS:
             if not s3_handler_functions.s3_path_existence_check(
-                bucket_name=bucket_name,
-                path=f'{home_directory}/{folder}/',
-                s3_client=s3_client,
+                    bucket_name=bucket_name,
+                    path=f'{home_directory}/{folder}/',
+                    s3_client=s3_client,
             ):
                 s3_handler_functions.onboard_new_user_with_home_directory_folders_in_s3(
                     bucket_name=bucket_name,
