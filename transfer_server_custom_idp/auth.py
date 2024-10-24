@@ -161,9 +161,14 @@ def construct_response(
         raise MissingCredentials()
 
     if ftp_user:
-        if secret_configuration.ftp_dealer_id:
+        if secret_configuration.ftp_dealer_id and not secret_configuration.ftp_company_id:
             secret_configuration.dealer_id = secret_configuration.ftp_dealer_id
-        if secret_configuration.ftp_company_id:
+            secret_configuration.company_id = None
+        if secret_configuration.ftp_company_id and not secret_configuration.ftp_dealer_id:
+            secret_configuration.company_id = secret_configuration.ftp_company_id
+            secret_configuration.dealer_id = None
+        if secret_configuration.ftp_company_id and secret_configuration.ftp_dealer_id:
+            secret_configuration.dealer_id = secret_configuration.ftp_dealer_id
             secret_configuration.company_id = secret_configuration.ftp_company_id
         if secret_configuration.ftp_type:
             secret_configuration.type = secret_configuration.ftp_type
