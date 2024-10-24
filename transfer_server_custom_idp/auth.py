@@ -3,7 +3,7 @@ import os
 import re
 
 import boto3
-from passlib.hash import pbkdf2_sha256
+from passlib.hash import django_pbkdf2_sha256
 from structlog.stdlib import BoundLogger
 
 from transfer_server_custom_idp.errors import (IncorrectPassword,
@@ -127,12 +127,12 @@ def construct_response(
             user_hash_value = secret_configuration.hash_value
             user_ftp_hash_value = secret_configuration.ftp_hash_value
             if user_hash_value:
-                is_decrypted_password_valid = pbkdf2_sha256.verify(
+                is_decrypted_password_valid = django_pbkdf2_sha256.verify(
                     input_password,
                     user_hash_value,
                 )
             elif user_ftp_hash_value:
-                is_decrypted_ftp_password_valid = pbkdf2_sha256.verify(
+                is_decrypted_ftp_password_valid = django_pbkdf2_sha256.verify(
                     input_password,
                     user_ftp_hash_value,
                 )
