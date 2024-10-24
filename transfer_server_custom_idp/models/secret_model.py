@@ -19,6 +19,9 @@ class Secret:
     role: Optional[Any] = None
     key: Optional[Any] = None
     shared: Optional[bool] = None
+    ftp_password: Optional[str] = None
+    ftp_hash_value: Optional[str] = None
+    ftp_ssh: Optional[str] = None
 
     def update(self, secret_dict: Dict[str, Any]):
         """Sets additional class attributes based on secret configuration dict."""

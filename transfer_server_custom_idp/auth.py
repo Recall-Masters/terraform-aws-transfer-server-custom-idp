@@ -111,21 +111,32 @@ def construct_response(
         return {}
     ssh_key = secret_configuration.key
     user_password = secret_configuration.password
+    user_ftp_password = secret_configuration.ftp_password
+    ftp_ssh_key = secret_configuration.ftp_ssh
+    is_decrypted_password_valid = False
+    is_decrypted_ftp_password_valid = False
 
     if input_password:
-        if user_password != input_password:
+        if user_password != input_password and user_ftp_password != input_password:
             logger.info(
                 'Password one to one check was failed for user %s.'
                 ' Trying to check against pbkdf2 hash.',
                 input_username,
             )
-            if user_hash_value := secret_configuration.hash_value:
+            user_hash_value = secret_configuration.hash_value
+            user_ftp_hash_value = secret_configuration.ftp_hash_value
+            if user_hash_value:
                 is_decrypted_password_valid = pbkdf2_sha256.verify(
                     input_password,
                     user_hash_value,
                 )
-                if not is_decrypted_password_valid:
-                    raise IncorrectPassword()
+            elif user_ftp_hash_value:
+                is_decrypted_ftp_password_valid = pbkdf2_sha256.verify(
+                    input_password,
+                    user_ftp_hash_value,
+                )
+            if not is_decrypted_password_valid and not is_decrypted_ftp_password_valid:
+                raise IncorrectPassword()
 
     if (
         not secret_configuration.company_id and
@@ -148,7 +159,12 @@ def construct_response(
             input_username,
         )
         response_object.public_keys = [ssh_key]
-
+    elif ftp_ssh_key:
+        logger.info(
+            'FTP SSH key was found to authorize for user %s.',
+            input_username,
+        )
+        response_object.public_keys = [ftp_ssh_key]
     elif not input_password:
         raise MissingCredentials()
 
