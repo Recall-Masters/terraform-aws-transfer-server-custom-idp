@@ -111,25 +111,21 @@ def construct_response(
         return {}
     ssh_key = secret_configuration.key
     user_password = secret_configuration.password
-    if user_password and (user_password != input_password):
-        logger.info(
-            'Password one to one check was failed for user %s.'
-            ' Trying to check against pbkdf2 hash.',
-            input_username,
-        )
-        if user_hash_value := secret_configuration.hash_value:
-            is_decrypted_password_valid = pbkdf2_sha256.verify(
-                login.password,
-                user_hash_value,
-            )
-            if not is_decrypted_password_valid:
-                raise IncorrectPassword()
+
+    if input_password:
+        if user_password != input_password:
             logger.info(
-                'User %s was authorized decrypted password against pbkdf2 hash.',
+                'Password one to one check was failed for user %s.'
+                ' Trying to check against pbkdf2 hash.',
                 input_username,
             )
-        else:
-            raise IncorrectPassword()
+            if user_hash_value := secret_configuration.hash_value:
+                is_decrypted_password_valid = pbkdf2_sha256.verify(
+                    input_password,
+                    user_hash_value,
+                )
+                if not is_decrypted_password_valid:
+                    raise IncorrectPassword()
 
     if (
         not secret_configuration.company_id and
@@ -153,7 +149,7 @@ def construct_response(
         )
         response_object.public_keys = [ssh_key]
 
-    elif not user_password:
+    elif not input_password:
         raise MissingCredentials()
 
     # If we've got this far then we've either authenticated the user by password
