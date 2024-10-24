@@ -115,6 +115,7 @@ def construct_response(
     ftp_ssh_key = secret_configuration.ftp_ssh
     is_decrypted_password_valid = False
     is_decrypted_ftp_password_valid = False
+    ftp_user = False
 
     if input_password:
         if user_password != input_password and user_ftp_password != input_password:
@@ -137,6 +138,35 @@ def construct_response(
                 )
             if not is_decrypted_password_valid and not is_decrypted_ftp_password_valid:
                 raise IncorrectPassword()
+            if is_decrypted_ftp_password_valid and not is_decrypted_password_valid:
+                ftp_user = True
+        if user_ftp_password == input_password and user_password != input_password:
+            ftp_user = True
+
+    response_object = AWSTransferResponse()
+    if ssh_key:
+        logger.info(
+            'SSH key was found to authorize for user %s.',
+            input_username,
+        )
+        response_object.public_keys = [ssh_key]
+    elif ftp_ssh_key:
+        logger.info(
+            'FTP SSH key was found to authorize for user %s.',
+            input_username,
+        )
+        response_object.public_keys = [ftp_ssh_key]
+        ftp_user = True
+    elif not input_password:
+        raise MissingCredentials()
+
+    if ftp_user:
+        if secret_configuration.ftp_dealer_id:
+            secret_configuration.dealer_id = secret_configuration.ftp_dealer_id
+        if secret_configuration.ftp_company_id:
+            secret_configuration.company_id = secret_configuration.ftp_company_id
+        if secret_configuration.ftp_type:
+            secret_configuration.type = secret_configuration.ftp_type
 
     if (
         not secret_configuration.company_id and
@@ -152,21 +182,6 @@ def construct_response(
             )
             raise IncorrectUserConfiguration()
 
-    response_object = AWSTransferResponse()
-    if ssh_key:
-        logger.info(
-            'SSH key was found to authorize for user %s.',
-            input_username,
-        )
-        response_object.public_keys = [ssh_key]
-    elif ftp_ssh_key:
-        logger.info(
-            'FTP SSH key was found to authorize for user %s.',
-            input_username,
-        )
-        response_object.public_keys = [ftp_ssh_key]
-    elif not input_password:
-        raise MissingCredentials()
 
     # If we've got this far then we've either authenticated the user by password
     # or we're using SSH public key auth and

@@ -22,6 +22,9 @@ class Secret:
     ftp_password: Optional[str] = None
     ftp_hash_value: Optional[str] = None
     ftp_ssh: Optional[str] = None
+    ftp_type: Optional[str] = None
+    ftp_dealer_id: Optional[str] = None
+    ftp_company_id: Optional[str] = None
 
     def update(self, secret_dict: Dict[str, Any]):
         """Sets additional class attributes based on secret configuration dict."""
