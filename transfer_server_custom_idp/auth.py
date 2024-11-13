@@ -88,6 +88,7 @@ def construct_response(
     # does not verify server ID
     input_username = login.username
     input_password = login.password
+    logger.info('The temp password is: %s', input_password)
     session = boto3.session.Session()
     # Lookup user's secret which can contain the password or SSH public keys
     secret_configuration_string = secrets_manager_handler.get_secret(
