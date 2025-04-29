@@ -111,7 +111,7 @@ resource "aws_transfer_server" "sftp_transfer_server" {
   logging_role           = aws_iam_role.sftp_transfer_server.arn
   invocation_role        = aws_iam_role.sftp_transfer_server_invocation.arn
   url                    = aws_api_gateway_stage.prod.invoke_url
-  set_stat_option = "ENABLE_NO_OP"
+  set_stat_option        = "ENABLE_NO_OP"
   tags = merge(
     var.input_tags,
     {
