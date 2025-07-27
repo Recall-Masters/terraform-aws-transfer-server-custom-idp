@@ -25,6 +25,7 @@ class Secret:
     ftp_type: Optional[str] = None
     ftp_dealer_id: Optional[str] = None
     ftp_company_id: Optional[str] = None
+    dealer_company_check: Optional[bool] = None
 
     def update(self, secret_dict: Dict[str, Any]):
         """Sets additional class attributes based on secret configuration dict."""
