@@ -1,0 +1,47 @@
+sftp/
+{%- if secret.type -%}
+    {%- if secret.type == "dms" -%}
+        username={{ secret.user_name }}/type={{ secret.type }}/
+        {%- if secret.company_id -%}
+            company={{ secret.company_id }}/
+        {%- endif -%}
+        {%- if secret.dealer_id -%}
+            dealer={{ secret.dealer_id }}/
+        {%- endif -%}
+    {%- elif secret.type == "prospect" -%}
+        type={{ secret.type }}/
+        {%- if secret.company_id -%}
+            company={{ secret.company_id }}/
+        {%- endif -%}
+        {%- if secret.dealer_id -%}
+            dealer={{ secret.dealer_id }}/
+        {%- endif -%}
+        prospect_warehouse_out/username={{ secret.user_name }}/
+    {%- elif secret.type == "inventory_check" -%}
+        {%- if secret.company_id -%}
+            company={{ secret.company_id }}/
+        {%- endif -%}
+        {%- if secret.dealer_id -%}
+            dealer={{ secret.dealer_id }}/
+        {%- endif -%}
+        username={{ secret.user_name }}/type=inventory/
+    {%- elif secret.type == "vin_check" -%}
+        {%- if secret.company_id -%}
+            company={{ secret.company_id }}/
+        {%- endif -%}
+        {%- if secret.dealer_id -%}
+            dealer={{ secret.dealer_id }}/
+        {%- endif -%}
+        username={{ secret.user_name }}/type=check/
+    {%- elif secret.type == "static" -%}
+        username={{ secret.user_name }}/type={{ secret.type }}/
+    {%- endif -%}
+{%- endif -%}
+{%- if not secret.type -%}
+        {%- if secret.company_id -%}
+            company={{ secret.company_id }}/
+        {%- endif -%}
+        {%- if secret.dealer_id -%}
+            dealer={{ secret.dealer_id }}/
+        {%- endif -%}
+{%- endif -%}
